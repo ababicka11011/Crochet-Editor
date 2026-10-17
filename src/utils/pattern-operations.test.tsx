@@ -88,7 +88,7 @@ describe('removeLastStitch', () => {
   it('removes the edges that belonged to the removed stitch, and only those', () => {
     const pattern = unwrap(removeLastStitch(chainOf(3)));
 
-    expect(pattern.edges).toEqual([{ kind: 'previous', from: 'stitch-1', to: 'stitch-0' }]);
+    expect(pattern.edges).toEqual([{ kind: 'previous', from: 'stitch-0', to: 'stitch-1' }]);
   });
 
   it('removes insertion edges of the removed stitch', () => {
