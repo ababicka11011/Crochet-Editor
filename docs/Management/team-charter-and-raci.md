@@ -45,7 +45,7 @@ Definicje ról:
 * **C (Consulted):** Ekspert merytoryczny, z którym konsultowano kwestie techniczne i który dokonał przeglądu.
 * **I (Informed):** Osoba na bieżąco informowana o postępach i ostatecznych decyzjach.
 
-| Task / Deliverable                                                   |      Anna      |       Wiktor       |      Promotor      | 
+| Zadanie  |      Anna      |       Wiktor       |      Promotor      | 
 | :------------------------------------------------------------------- | :-------------: | :-------------: | :-------------: |
 | **Cel, zakres, MVP, wymagania, harmonogram, zarządzanie ryzykiem (Etap 1)**                    |   **A**   |        R        |        C        |
 | **Projekt architektury i interfejsów (Etap 2)**            | **A / R** |        R        |        C        |
@@ -59,8 +59,8 @@ Definicje ról:
 | **Ewaluacja algorytmu (Etap 4)**    |   **A / R**   |        C        |        C        |
 | **Implementacja dodatkowych funkcjonalności (Etap 5)**    |   R   |        A        |        C        |
 | **Praca pisemna: wstęp, przegląd literatury, użyte algorytmy, model danych (Etap 6)**     | **A / R** |        R        |        C        |
-| **Praca pisemna: architektura rozwiązania, implementacja, wyniki** |   R   | **A / R** |        C        |
-| **Praca pisemna: Redakcja i zatwierdzenie całości** |        R        |        R        |        **A**        |
+| **Praca pisemna: architektura rozwiązania, implementacja, wyniki (Etap 6)** |   R   | **A / R** |        C        |
+| **Praca pisemna: Redakcja i zatwierdzenie całości (Etap 6)** |        R        |        R        |        **A**        |
 
 ---
 
