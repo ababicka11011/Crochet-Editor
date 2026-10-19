@@ -36,12 +36,28 @@ export function addStitch(pattern: Pattern, type: StitchType,
   Returns a Result object containing either the updated pattern or an error message.
   */
 
-//         Walidacja wejścia. Sprawdź, czy wskazane id istnieją, czy typ oczka dopuszcza wbicie (isChain → brak insertInto) i czy nie powstaje cykl w krawędziach worked-into.
-// Wyliczenie pochodnych. Ustal nowe id, kolejne order, round (np. od oczka-rodzica + 1) i poprzednie oczko dla krawędzi sequence.
-// Budowa nowego stanu. Zwróć nowy obiekt: stitches z dodanym wpisem i edges z dopisanymi krawędziami. Nie modyfikuj p.
-// Zwrot wyniku. { ok: true, value } albo { ok: false, error }.
+  // Walidacja wejścia. Sprawdź, czy wskazane id istnieją, czy typ oczka dopuszcza wbicie (isChain → brak insertInto) i czy nie powstaje cykl w krawędziach worked-into.
+  // Wyliczenie pochodnych. Ustal nowe id, kolejne order, round (np. od oczka-rodzica + 1) i poprzednie oczko dla krawędzi sequence.
+  // Budowa nowego stanu. Zwróć nowy obiekt: stitches z dodanym wpisem i edges z dopisanymi krawędziami. Nie modyfikuj p.
+  // Zwrot wyniku. { ok: true, value } albo { ok: false, error }.
   // console.log('Adding stitch:', newStitchId, 'Type:', type, 'Insert into:', insertInto, 'Insertion:', insertion);
   
+  // 1. Reject chain stitches that try to insert into something
+  if (type === 'ch' && insertInto !== undefined) {
+    return { ok: false, error: 'Chain stitches cannot be inserted into other stitches' };
+  }
+
+  // 2. Validate all insertion targets exist
+  const targets = insertInto === undefined
+    ? []
+    : Array.isArray(insertInto) ? insertInto : [insertInto];
+
+  for (const id of targets) {
+    if (!pattern.stitches[id]) {
+      return { ok: false, error: `Stitch ${id} does not exist` };
+    }
+  }
+
   // Choose the anchor stitch for positioning the new stitch. If insertInto is provided, use the first id in the array; otherwise, use the current cursor.
   const anchorId = Array.isArray(insertInto) ? insertInto[0] : insertInto;
   
@@ -96,13 +112,16 @@ export function removeLastStitch(pattern: Pattern): Result<Pattern> {
   }
 
   // Identify the previous stitch based on the current cursor and edges
-  const previousEdge = pattern.edges.filter(edge => edge.from === pattern.cursor && edge.kind === 'previous')[0];
-  const previousStitchId = previousEdge ? previousEdge.to : null;
+  // (edge direction is from older to newer, so we look for the edge that points to the cursor)
+  const previousEdge = pattern.edges.find(
+    edge => edge.kind === 'previous' && edge.to === pattern.cursor
+  );
+  const previousStitchId = previousEdge ? previousEdge.from : null;
   //const previousStitch = pattern.stitches[previousStitchId || '']; // should be safe since previousStitchId is either a valid id or null
   
   // Create a new stitches object without the last stitch and filter out edges related to the last stitch
   const newStitches = { ...pattern.stitches };
-  delete newStitches[previousStitchId || '']; // should be safe since previousStitchId is either a valid id or null
+  delete newStitches[pattern.cursor!]; // remove the current (most recent) stitch
   const newEdges = pattern.edges.filter(edge => edge.from !== pattern.cursor && edge.to !== pattern.cursor);
 
   // Create the new pattern object with updated stitches, edges, and cursor
