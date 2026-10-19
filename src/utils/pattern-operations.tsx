@@ -74,7 +74,7 @@ export function addStitch(pattern: Pattern, type: StitchType,
   };
 
   // previousEdge is not needed since we already have previous in the stitch object, but we can keep it for calculating position.
-  const previousEdge: Edge = { kind: 'previous', from: newStitch.id, to: pattern.cursor || '' };
+  const previousEdge: Edge = { kind: 'previous', from: pattern.cursor || '', to: newStitch.id };
   
   // Create the new pattern object by adding the new stitch and edge to the existing pattern.
   const newPattern: Pattern = { ...pattern, 
@@ -112,10 +112,12 @@ export function removeLastStitch(pattern: Pattern): Result<Pattern> {
   }
 
   // Identify the previous stitch based on the current cursor and edges
+  // (edge direction is from older to newer, so we look for the edge that points to the cursor)
   const previousEdge = pattern.edges.find(
-    edge => edge.kind === 'previous' && edge.from === pattern.cursor
+    edge => edge.kind === 'previous' && edge.to === pattern.cursor
   );
-  const previousStitchId = previousEdge ? previousEdge.to : null;
+  const previousStitchId = previousEdge ? previousEdge.from : null;
+  //const previousStitch = pattern.stitches[previousStitchId || '']; // should be safe since previousStitchId is either a valid id or null
   
   // Create a new stitches object without the last stitch and filter out edges related to the last stitch
   const newStitches = { ...pattern.stitches };
