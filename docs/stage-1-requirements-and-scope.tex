@@ -1,0 +1,487 @@
+\documentclass[a4paper,11pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\hypersetup{hidelinks}
+\usepackage[polish]{babel}
+\usepackage[utf8]{inputenc}
+
+\usepackage{amsmath, amsfonts, amsthm, latexsym} % głównie symbole matematyczne, środowiska twierdzeń
+\usepackage[final]{pdfpages} % inputowanie pdfa
+
+\usepackage[inner=20mm, outer=20mm, bindingoffset=0mm, top=25mm, bottom=25mm]{geometry}
+\linespread{1.2}
+\allowdisplaybreaks
+\usepackage{indentfirst} % opcjonalnie; pierwszy akapit z wcięciem
+\setlength{\parindent}{5mm}
+
+\usepackage{tabularx}
+\usepackage{xltabular}
+\raggedbottom
+
+% ----------------------------Do wypełnienia ----------------------
+\renewcommand{\title}{Edytor schematów szydełkowych z automatycznym rozmieszczaniem symboli}
+\newcommand{\stage}{Etap 1: Specyfikacja wymagań i określenie zakresu projektu}
+\newcommand{\supervisor}{dr inż. Paweł Kotowski}
+
+\newcommand{\authori}{Anna Babicka}
+\newcommand{\authorii}{Wiktor Murawski}
+
+
+\begin{document}
+
+\thispagestyle{empty}
+
+\begin{center}
+
+\includegraphics[width=\textwidth]{img/politechnika} 
+\vspace{100pt} 
+
+{\huge \title}
+
+\vspace{50pt}
+{\Large \stage}
+
+\vspace{60pt}
+
+Autorzy: \\
+\vspace{5pt}
+{\Large \authori, \authorii}
+
+\vspace{50pt}
+
+Promotor: \\
+\vspace{5pt}
+{\Large \supervisor}
+
+\vfill
+19.10.2026 \\
+\vspace{20pt}
+
+\end{center}
+
+\pagebreak
+
+\tableofcontents
+
+\pagebreak
+
+\section{Historia zmian dokumentu}
+
+\begin{tabularx}{0.95\textwidth}{|c|c|c|X|}
+  \hline
+  Wersja & Data & Autor & Opis zmian \\
+  \hline
+  \textbf{1.0} & 18.10.2026 & Anna Babicka & \textit{Pierwsza wersja dokumentu} \\
+  \hline
+  \textbf{1.1} & 19.10.2026 & Anna Babicka & \textit{Wprowadzenie poprawek po konsultacji z promotorem} \\
+  \hline
+\end{tabularx}
+
+\pagebreak
+
+% <!-- Spis treści: -->
+
+\section{Opis rozwiązania i motywacja}
+
+Celem projektu jest zaprojektowanie, implementacja i ocena intuicyjnej aplikacji webowej do tworzenia schematów szydełkowych, która odciąża użytkownika od ręcznego rozmieszczania symboli dzięki reprezentacji wzorów jako grafów oczek i automatycznemu układowi uwzględniającemu geometrię oczek, umożliwiając szybkie i bezbłędne tworzenie czytelnych schematów wzorów.
+
+% <!-- Jak to nazwać? -->
+
+\pagebreak
+
+\section{Słownik}
+
+\subsection{Szydełkowanie}
+
+\begin{tabularx}{0.95\textwidth}{|p{5cm}|X|}
+  \hline
+  \textbf{Termin} & \textbf{Definicja} \\
+  \hline
+  \textbf{Oczko (ścieg, stitch)} & Podstawowa jednostka robótki, powstająca przez przeciągnięcie nici przez pętle na szydełku. \\
+  \hline
+  \textbf{Łańcuszek (ch)} & A Oczko niewbijane w robótkę. Podnosi poziom pracy i tworzy łuki. \\
+  \hline
+  \textbf{Oczko ścisłe (sl st)} & Oczko łączące dwa punkty bez zwiększania wysokości. Służy m.in. do zamykania okrążeń. \\
+  \hline
+  \textbf{Półsłupek (sc), \newline słupek półpodwójny (hdc), \newline słupek (dc), \newline słupek podwójny (tr)} & Podstawowe oczka różniące się wysokością. \\
+  \hline
+  \textbf{Wbicie (punkt wbicia, insertion)} & Miejsce, w które wkłada się szydełko przy tworzeniu oczka, np. pod obie pętle, przednią lub tylną pętlę albo w łuk. \\
+  \hline
+  \textbf{Magiczne kółko (mr)} & Technika rozpoczęcia robótki okrężnej z zaciąganą pętlą. \\
+  \hline
+  \textbf{Okrążenie / rząd (warstwa)} & Kolejna warstwa oczek wykonywana po okręgu lub w linii. \\
+  \hline
+  \textbf{Dodawanie / łączenie (increase / decrease)} & Zwiększanie lub zmniejszanie liczby oczek w warstwie. \\
+  \hline
+  \textbf{Schemat (chart)} & Graficzny zapis wzoru za pomocą standardowych symboli. \\
+  \hline
+  \textbf{Próbka (swatch)} & Fragment robótki o znanej liczbie oczek, używany do kalibracji wymiarów. \\
+  \hline
+\end{tabularx}
+
+\subsection{Model i algorytmy}
+
+\begin{tabularx}{0.95\textwidth}{|p{5cm}|X|}
+  \hline
+  \textbf{Termin} & \textbf{Definicja} \\
+  \hline
+  \textbf{Graf wzoru} & Reprezentacja wzoru, w której wierzchołki to oczka, a krawędzie to relacje między nimi. \\
+  \hline
+  \textbf{Układ (layout)} & Przypisanie symbolom pozycji, obrotów i skal na płaszczyźnie. \\
+  \hline
+  \textbf{Algorytm force-directed} & Metoda wyznaczania układu przez symulację sił przyciągania i odpychania między wierzchołkami. \\
+  \hline
+  \textbf{Stress / stress majorization} & Miara i metoda minimalizacji rozbieżności między odległościami na rysunku a odległościami docelowymi. \\
+  \hline
+  \textbf{Proporcja H/W (aspect ratio)} & Stosunek wysokości do szerokości oczka, z wartością preferowaną i granicami. \\
+  \hline
+  \textbf{Kalibracja} & Dopasowanie parametrów geometrii do włóczki i napięcia użytkownika na podstawie próbki. \\
+  \hline
+\end{tabularx}
+
+\subsection{Technologie i jakość}
+
+\begin{tabularx}{0.95\textwidth}{|p{5cm}|X|}
+  \hline
+  \textbf{Termin} & \textbf{Definicja} \\
+  \hline
+  \textbf{SVG} & Wektorowy format grafiki, używany do renderowania i eksportu schematów. \\
+  \hline
+  \textbf{Undo/redo} & cofanie i ponawianie operacji. \\
+  \hline
+  \textbf{Web Worker} & Mechanizm przeglądarki do wykonywania obliczeń w osobnym wątku. \\
+  \hline
+  \textbf{MVP} & Minimalna wersja produktu realizująca podstawowe funkcje. \\
+  \hline
+  \textbf{NFR} & Wymaganie niefunkcjonalne, dotyczące jakości, a nie funkcji systemu. \\
+  \hline
+  \textbf{Percentyl (p95)} & Wartość, poniżej której mieści się 95\% pomiarów. \\
+  \hline
+\end{tabularx}
+
+\pagebreak
+
+\section{Zakres projektu: MVP i opcjonalne funkcjonalności}
+
+Zakres projektu został podzielony na MVP (Minimum Viable Product) - kluczowe funkcjonalności, które muszą działać, żeby móc uznać aplikację za funkcjonalną, oraz opcjonalne funkcjonalności, które poszerzają możliwości aplikacji, ale nie są niezbędne i mogą zostać zaimplementowane, jeśli starczy na to czasu.
+
+\subsection{Minimum Viable Product (MVP – Passing Scope)}
+
+\begin{enumerate}
+  \item \textbf{Graficzny interfejs edytora:} Pozwalający na łatwe i intuicyjne dodawanie, usuwanie i edycję elementów oraz wyświetlanie obecnego stanu wzoru.
+  \item \textbf{Automatyczne rozmieszczanie symboli:} Wyznaczenie wzajemnego położenia symboli odwzorowującego rzeczywiste ich rozmieszczenie po wyszydełkowaniu wzoru za pomocą force-directed algorytmu.
+  \item \textbf{Zapisanie i wczytanie postępów pracy:} Eksport i import danych schematu do pliku np. w formacie JSON, zachowującego informacje strukturalne.
+  \item \textbf{Eksport schematu do pliku w formacie graficznym:} Zapisanie gotowego schematu do pliku SVG, konwersja do PDF, PNG, JPEG.
+\end{enumerate}
+
+\subsection{Opcjonalne funkcjonalności}
+
+\begin{enumerate}
+  \item Możliwość ręcznych poprawek ustawienia poszczególnych symboli / grup symboli, w tym zablokowanie pozycji wybranych elementów.
+  \item Modyfikacja parametrów algorytmu automatycznego rozmieszczania.
+  \item Identyfikacja i wizualne zaznaczenie potencjalnie problematycznych fragmentów, mogących świadczyć o błędach we wzorze.
+  \item Konwersja schematu do instrukcji tekstowych i na odwrót.
+  \item Grupowanie elementów i możliwość dodawania/usuwania całych grup symboli.
+  \item Wizualizacja kolejności wykonywania elementów przy odtwarzaniu wzoru.
+\end{enumerate}
+
+\pagebreak
+
+\section{Wymagania funkcjonalne}
+
+Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User Stories) i przedstawione na diagramie przypadków użycia. Wymagania dotyczą tylko zakresu MVP, opcjonalne funkcjonalności nie zostały tutaj uwzględnione. W tym przypadku mamy tylko jednego użytkownika - osobę projektującą wzór.
+
+\subsection*{\textbf{US-01: Dodawanie oczka przez kliknięcie}}
+
+\noindent\textbf{Jako:} Osoba projektująca wzór,\\
+\noindent\textbf{Chcę:} wybrać typ elementu z palety symboli i dodać go, klikając na element, w który chcę go wbić, \\
+\noindent\textbf{Aby:} tworzyć wzór zgodnie z tym, jak powinien być on wyszydełkowany.
+
+\begin{quote}
+\textbf{Kryteria akceptacji (Gherkin):}
+
+\textbf{Given:} wzór zawiera co najmniej jeden element, a w palecie wybrany jest słupek \\
+\textbf{When:} użytkownik klika symbol na schemacie \\
+\textbf{Then:} do wzoru zostaje dodany słupek wbity w kliknięty element, a na schemacie pojawia się nowy symbol.
+
+\textbf{Scenariusz: niedozwolone wbicie} \\
+\textbf{When:} wybrany jest typ elementu, którego nie można wbić we wskazane miejsce \\
+\textbf{Then:} wzór pozostaje bez zmian i wyświetla się komunikat z przyczyną \\
+\end{quote}
+
+\subsection*{\textbf{US-02: Usuwanie i edycja oczek}}
+
+\noindent\textbf{Jako:} Osoba projektująca wzór,\par
+\noindent\textbf{Chcę:} usuwać oczka i zmieniać ich właściwości,\par
+\noindent\textbf{Aby:} poprawiać błędy bez budowania wzoru od nowa.\par
+
+\begin{quote}
+\textbf{Kryteria akceptacji (Gherkin):}
+
+\textbf{Scenariusz: usunięcie ostatniego oczka} \\
+\textbf{Given:} wzór zawiera co najmniej jedno oczko \\
+\textbf{When:} użytkownik wybiera "Usuń ostatnie oczko" \\
+\textbf{Then:} ostatnio dodane oczko zostaje usunięte razem z jego połączeniami i pozycja nici wraca do poprzedniego oczka
+
+\textbf{Scenariusz: zmiana typu oczka} \\
+\textbf{Given:} użytkownik zaznaczył oczko \\
+\textbf{When:} wybiera inny typ oczka w panelu właściwości, np. słupek zamiast półsłupka \\
+\textbf{Then:} oczko zmienia typ, a jego połączenia pozostają bez zmian i układ symboli zostaje przeliczony
+\end{quote}
+
+\subsection*{\textbf{US-03: Dodawanie i łączenie oczek}}
+
+\noindent\textbf{Jako:} Osoba projektująca wzór,\par
+\noindent\textbf{Chcę:} dodawać kilka oczek w jedno miejsce i łączyć oczka,\par
+\noindent\textbf{Aby:} zmieniać kształt robótki.\par
+
+\begin{quote}
+\textbf{Kryteria akceptacji (Gherkin):}
+
+\textbf{Scenariusz: dodawanie oczek w jedno miejsce} \\
+\textbf{Given:} w palecie wybrany jest typ oczka pozwalający na wbicie \\
+\textbf{When:} użytkownik klika to samo oczko kilka razy z rzędu \\
+\textbf{Then:} każde kliknięcie dodaje nowy słupek wbity w to samo oczko i symbole rozkładają się wachlarzowo nad oczkiem bazowym
+
+\textbf{Scenariusz: łączenie kilku oczek} \\
+\textbf{Given:} w palecie wybrany jest typ oczka pozwalający na wbicie, a tryb łączenia jest włączony \\
+\textbf{When:} użytkownik zaznacza kolejno dwa lub więcej sąsiednich oczek i zatwierdza wybór \\
+\textbf{Then:} zostaje dodany jeden półsłupek wbity we wszystkie zaznaczone oczka, a jego symbol odzwierciedla łączenie
+\end{quote}
+
+\subsection*{\textbf{US-04: Zmiana okrążenia/rzędu}}
+
+\noindent\textbf{Jako:} Osoba projektująca wzór,\par
+\noindent\textbf{Chcę:} zakończyć okrążenie/rząd i rozpocząć następne,\par
+\noindent\textbf{Aby:} budować wzór warstwami i zwiększyć jego czytelność.\par
+
+\begin{quote}
+\textbf{Kryteria akceptacji (Gherkin):}
+
+\textbf{Given:} bieżąca warstwa ma numer \textit{n} i zawiera co najmniej jeden element \\
+\textbf{When:} użytkownik wybiera opcję "nowa warstwa" \\
+\textbf{Then:} numer bieżącej warstwy wynosi \textit{n+1} i dodawane elementy mają przypisany numer warstwy \textit{n+1}.
+\end{quote}
+
+\subsection*{\textbf{US-05: Operacje undo/redo}}
+
+\noindent\textbf{Jako:} Osoba projektująca wzór,\par
+\noindent\textbf{Chcę:} cofać i ponawiać operacje,\par
+\noindent\textbf{Aby:} swobodnie eksperymentować.\par
+
+\begin{quote}
+\textbf{Kryteria akceptacji (Gherkin):}
+
+\textbf{Scenariusz: cofnięcie operacji} \\
+\textbf{Given:} użytkownik wykonał operację modyfikującą wzór \\
+\textbf{When:} naciska Ctrl+Z lub przycisk "Cofnij" \\
+\textbf{Then:} wzór, pozycja nici i numer okrążenia wracają do stanu sprzed operacji
+
+\textbf{Scenariusz: ponowienie operacji} \\
+\textbf{Given:} użytkownik cofnął operację \\
+\textbf{When:} naciska Ctrl+Y lub przycisk "Ponów" \\
+\textbf{Then:} wzór wraca do stanu po tej operacji
+\end{quote}
+
+\subsection*{\textbf{US-06: Przesuwanie i skalowanie wzoru}}
+
+\noindent\textbf{Jako:} Osoba projektująca wzór,\par
+\noindent\textbf{Chcę:} przesuwać i przybliżać schemat,\par
+\noindent\textbf{Aby:} wygodnie pracować zarówno z detalami, jak i z całym wzorem.\par
+
+\begin{quote}
+\textbf{Kryteria akceptacji (Gherkin):}
+
+\textbf{Scenariusz: przybliżanie i oddalanie} \\
+\textbf{Given:} schemat jest wyświetlony \\
+\textbf{When:} użytkownik obraca kółkiem myszy albo klika "+" lub "-" \\
+\textbf{Then:} widok przybliża się lub oddala względem pozycji kursora albo środka widoku i aktualna skala jest widoczna w interfejsie
+
+\textbf{Scenariusz: przesuwanie widoku} \\
+\textbf{Given:} schemat jest wyświetlony \\
+\textbf{When:} użytkownik przeciąga tło \\
+\textbf{Then:} widok przesuwa się zgodnie z ruchem kursora
+\end{quote}
+
+\subsection*{\textbf{US-07: Automatyczne rozmieszczanie symboli}}
+
+\noindent\textbf{Jako:} Osoba projektująca wzór,\par
+\noindent\textbf{Chcę:} aby symbole układały się automatycznie po wprowadzeniu zmian,\par
+\noindent\textbf{Aby:} uniknąć konieczności ręcznego ustawiania i obracania symboli.\par
+
+\begin{quote}
+\textbf{Kryteria akceptacji (Gherkin):}
+
+\textbf{Given:} wzór jest wyświetlony na schemacie \\
+\textbf{When:} użytkownik modyfikuje wzór \\
+\textbf{Then:} układ symboli zostaje przeliczony i wyświetlają się one w zaktualizowanych pozycjach
+
+\textbf{Scenariusz: orientacja i proporcje symboli} \\
+\textbf{Given:} układ został przeliczony \\
+\textbf{When:} użytkownik ogląda schemat \\
+\textbf{Then:} każdy symbol jest skierowany podstawą w stronę oczka, w które jest wbity, proporcje H/W każdego symbolu mieszczą się w granicach zdefiniowanych dla jego typu i symbole nie nakładają się na siebie (na tyle na ile to możliwe)
+
+\textbf{Scenariusz: duża liczba oczek} \\
+\textbf{Given:} wzór zawiera ok. 500 oczek \\
+\textbf{When:} trwa przeliczanie układu \\
+\textbf{Then:} interfejs reaguje na działania użytkownika (przewijanie, przybliżanie, wybór w palecie)
+\end{quote}
+
+\subsection*{\textbf{US-08: Zapis i odczyt}}
+
+\noindent\textbf{Jako:} Osoba projektująca wzór,\par
+\noindent\textbf{Chcę:} zapisać projekt do pliku i ponownie go otworzyć,\par
+\noindent\textbf{Aby:} kontynuować pracę później.\par
+
+\begin{quote}
+\textbf{Kryteria akceptacji (Gherkin):}
+
+\textbf{Given:} użytkownik utworzył wzór \\
+\textbf{When:} zapisuje projekt do pliku, a następnie go wczytuje \\
+\textbf{Then:} wzór, pozycja nici i numer bieżącego okrążenia pozostają takie same jak przed zapisem
+
+\textbf{Scenariusz: niepoprawny plik} \\
+\textbf{Given:} w edytorze jest otwarty wzór \\
+\textbf{When:} użytkownik wczytuje uszkodzony lub niepoprawny plik \\
+\textbf{Then:} wyświetla się komunikat błędu, a bieżący wzór pozostaje niezmieniony
+
+\textbf{Scenariusz: niezapisane zmiany} \\
+\textbf{Given:} wzór ma niezapisane zmiany \\
+\textbf{When:} użytkownik próbuje zamknąć lub odświeżyć stronę \\
+\textbf{Then:} pojawia się ostrzeżenie o utracie zmian
+\end{quote}
+
+\subsection*{\textbf{US-09: Eksport do pliku graficznego}}
+
+\noindent\textbf{Jako:} Osoba projektująca wzór,\par
+\noindent\textbf{Chcę:} wyeksportować schemat do pliku SVG, PDF lub PNG,\par
+\noindent\textbf{Aby:} go wydrukować lub opublikować.\par
+
+\begin{quote}
+\textbf{Kryteria akceptacji (Gherkin):}
+
+\textbf{Given:} wzór zawiera co najmniej jedno oczko \\
+\textbf{When:} użytkownik wybiera eksport do wybranego formatu \\
+\textbf{Then:} w razie potrzeby wzór jest konwertowany do wybranego formatu, zostaje pobrany plik z całym schematem, niezależnie od bieżącego przybliżenia widoku.
+\end{quote}
+
+\pagebreak
+
+\section{Mierzalne wymagania niefunkcjonalne (NFRs \textendash Quantifiable Non-Functional Requirements)}
+
+Poniższe wymagania niefunkcjonalne opisują oczekiwaną jakość działania systemu. Każde z nich ma mierzalną wartość docelową i określoną metodę weryfikacji. Podane progi są wartościami wstępnymi i mogą zostać skorygowane na podstawie pomiarów prototypu.
+
+\begin{xltabular}{0.95\textwidth}{|c|l|X|X|}  
+  \hline
+  \textbf{ID} & \textbf{Kategoria} & \textbf{Docelowa mierzalna metryka} & \textbf{Sposób weryfikacji} \\
+  \hline
+  \textbf{NFR-P1} & \textbf{Wydajność} & Dodanie oczka jest widoczne na schemacie w $\leq$ 200 ms (p95) dla wzoru do 500 oczek. & Pomiar czasu od kliknięcia do renderu, np. \texttt{performance.now()} lub React Profiler \\
+  \hline
+  \textbf{NFR-P2} & \textbf{Wydajność} & Pełne przeliczenie układu dla wzoru 500 oczek trwa $\leq$ 2 s. & Benchmark na zestawie testowych wzorów \\
+  \hline
+  \textbf{NFR-P3} & \textbf{Wydajność} & Podczas przeliczania układu interfejs utrzymuje $\geq$ 30 FPS przy przewijaniu i przybliżaniu. & Chrome DevTools, zakładka Performance \\
+  \hline
+  \textbf{NFR-P4} & \textbf{Wydajność} & Pierwsze załadowanie aplikacji: Largest Contentful Paint $\leq$ 2,5 s. & Chrome DevTools Lighthouse \\
+  \hline
+  \textbf{NFR-L1} & \textbf{Jakość układu} & 95\% symboli ma proporcje H/W w zdefiniowanych granicach. & Automatyczny test na zestawie wzorów \\
+  \hline
+  \textbf{NFR-L2} & \textbf{Jakość układu} & Pole nakładania się symboli wynosi $\leq$ 1\% ich łącznego pola. & Automatyczny test geometryczny \\
+  \hline
+  \textbf{NFR-L3} & \textbf{Jakość układu} & Ten sam wzór daje ten sam układ (deterministyczność przy stałym seedzie). & Test porównujący dwa uruchomienia \\
+  \hline
+  \textbf{NFR-C1} & \textbf{Kompatybilność} & Aplikacja działa poprawnie (wszystkie scenariusze MVP przechodzą) w przeglądarkach desktopowych w wersjach nie starszych niż: Chrome 155, Edge 155, Firefox 157, Safari 26 (macOS). Stan wersji na dzień 19.10.2026. & Testy manualne lub Playwright na wielu przeglądarkach \\
+  \hline
+  \textbf{NFR-C2} & \textbf{Kompatybilność} & Interfejs jest używalny od rozdzielczości 1280×720. & Testy wizualne \\
+  \hline
+  \textbf{NFR-R1} & \textbf{Niezawodność} & Zapis i wczytanie projektu zachowuje 100\% danych wzoru. & Test automatyczny: zapis, odczyt, porównanie \\
+  \hline
+  \textbf{NFR-R2} & \textbf{Niezawodność} & Niepoprawny plik projektu nigdy nie powoduje awarii aplikacji. & Testy z uszkodzonymi plikami (fuzzing JSON) \\
+  \hline
+  \textbf{NFR-R3} & \textbf{Niezawodność} & Niezapisany stan jest odtwarzany po przypadkowym odświeżeniu strony (autozapis co $\leq$ 30 s). & Test manualny \\
+  \hline
+  \textbf{NFR-M1} & \textbf{Utrzymywalność} & Pokrycie testami modułu modelu i algorytmów $\geq$ 80\%. & Raport pokrycia, np. Vitest z istanbul \\
+  \hline
+\end{xltabular}
+
+\pagebreak
+
+\section{Zarządzanie ryzykiem {\textendash} analiza SWOT}
+
+Analiza SWOT przedstawia mocne i słabe strony projektu (czynniki wewnętrzne) oraz szanse i zagrożenia wynikające z jego otoczenia (czynniki zewnętrzne).
+\vspace{0.5cm}
+
+\begin{tabularx}{0.95\textwidth}{|c|X|X|}
+  \hline
+   & \textbf{Pozytywne} & \textbf{Negatywne} \\
+  \hline
+  \textbf{Wewnętrzne} & \textbf{Mocne strony (S):} \newline - Nowoczesny, dobrze udokumentowany stos (React, TypeScript, SVG) \newline - Architektura z oddzielonym modelem, łatwa do testowania \newline - Nacisk na UX, którego brakuje istniejącym narzędziom & \textbf{Słabe strony (W):} \newline - Ograniczone doświadczenie z algorytmami layoutu grafów \newline - Niepewne dane o geometrii oczek \newline - Ograniczony czas i dwuosobowy zespół \newline - Trudność obiektywnej oceny "ładności" układu \newline - Zależność dwóch części pracy od wspólnego interfejsu \\
+  \hline
+  \textbf{Zewnętrzne} & \textbf{Szanse (O):} \newline - Niszowy obszar z małą liczbą narzędzi łączących automatyczny układ z edycją \newline - Duża społeczność szydełkująca i rynek wzorów \newline - Gotowe biblioteki (d3-force, WebCola) skracające implementację \newline - Możliwość dalszego rozwoju: instrukcje tekstowe, 3D, kalibracja \newline - Rosnące zainteresowanie badawcze cyfryzacją rękodzieła (prace z 2022–2025) & \textbf{Zagrożenia (T):}  \newline - Istniejące narzędzia (CrochetPARADE, Stitch Fiddle) mogą rozwinąć podobne funkcje \newline - Brak standardu notacji utrudnia uniwersalność \newline - Ograniczony dostęp do użytkowników testowych \newline - Ryzyko, że wynik nie spełni oczekiwań estetycznych osób szydełkujących \newline - Zmiany wymagań ze strony promotora \\
+  \hline
+\end{tabularx}
+
+\pagebreak
+
+\section{Harmonogram i macierz RACI}
+
+\noindent\textbf{[Tydzień 01-03] Etap 1:} Rozpisanie wymagań, Podział na MVP i funkcje opcjonalne, Research dostępnych narzędzi i technologii, Analiza ryzyka. \\
+\noindent\textbf{[Tydzień 04] Etap 2:} Zdefiniowanie modeli, architektury, komunikacji między modułami, Wybór algorytmu(-ów) do rozmieszczania symboli. \\
+\noindent\textbf{[Tydzień 05-06] Etap 3:} Implementacja poszczególnych komponentów MVP, Testy jednostkowe. \\
+\noindent\textbf{[Tydzień 07-08] Etap 4:} Integracja modułów, Testy integracyjne, Pierwsza funkcjonalna wersja aplikacji, Prezentacja aplikacji promotorowi i zebranie informacji o ewentualnych koniecznych poprawkach. \\
+\noindent\textbf{[Tydzień 09-11] Etap 5:} Bufor zapasowy czasu w razie potrzeby, Inkrementalna implementacja, testowanie i integracja dodatkowych funkcjonalności. \\
+\noindent\textbf{[Tydzień 12] Zamrożenie kodu,} Zakończenie prac nad aplikacją. \\
+\noindent\textbf{[Tydzień 13-14] Etap 6:} Prezentacja finalnej wersji aplikacji promotorowi, Ewaluacja wydajności, Pisanie pracy dyplomowej \\
+\noindent\textbf{[Tydzień 15]} Uzyskanie oceny od promotora, Przygotowanie wersji do wysłania do APD, Przygotowanie prezentacji na obronę
+
+\subsection{Macierz odpowiedzialności (RACI)}
+
+Definicje ról:
+
+\begin{itemize}
+  \item \textbf{R (Responsible):} Osoba wykonująca zadanie (bezpośredni autor kodu / dokumentacji).
+  \item \textbf{A (Accountable):} Osoba ponosząca ostateczną odpowiedzialność za jakość wyników i dotrzymanie terminów (\textbf{dokładnie 1 osoba na każde zadanie!}).
+  \item \textbf{C (Consulted):} Ekspert merytoryczny, z którym konsultowano kwestie techniczne i który dokonał przeglądu.
+  \item \textbf{I (Informed):} Osoba na bieżąco informowana o postępach i ostatecznych decyzjach.
+\end{itemize}
+
+\begin{xltabular}{0.95\textwidth}{|X|c|c|c|}
+  \hline
+  \textbf{Zadanie} & \textbf{Anna} & \textbf{Wiktor} & \textbf{Promotor} \\
+  \hline
+  Cel, zakres, MVP, wymagania, harmonogram, zarządzanie ryzykiem (Etap 1) & \textbf{A} & R & C \\
+  \hline
+  Projekt architektury i interfejsów (Etap 2) & \textbf{A / R} & R & C \\
+  \hline
+  Przegląd literatury i dane o geometrii oczek (Etap 2) & \textbf{A / R} & C & I \\
+  \hline
+  Model danych i operacje na grafie (Etap 2) & \textbf{A / R} & C & C \\
+  \hline
+  Algorytm rozmieszczania i metryki estetyczne (Etap 2) & \textbf{A / R} & I & C \\
+  \hline
+  Projekt UX/UI (Etap 2) & C & \textbf{A / R} & I \\
+  \hline
+  Implementacja edytora (SVG, interakcje, undo/redo) (Etap 3) & C & \textbf{A / R} & - \\
+  \hline
+  Testy automatyczne i code review (Etap 3) & R & \textbf{A / R} & C \\
+  \hline
+  Integracja modułu algorytmicznego z edytorem (Etap 4) & \textbf{A / R} & R & - \\
+  \hline
+  Ewaluacja algorytmu (Etap 4) & \textbf{A / R} & C & C \\
+  \hline
+  Implementacja dodatkowych funkcjonalności (Etap 5) & R & \textbf{A / R} & C \\
+  \hline
+  Praca pisemna: wstęp, przegląd literatury, użyte algorytmy, model danych (Etap 6) & \textbf{A / R} & R & C \\
+  \hline
+  Praca pisemna: architektura rozwiązania, implementacja, wyniki (Etap 6) & R & \textbf{A / R} & C \\
+  \hline
+  Praca pisemna: Redakcja i zatwierdzenie całości (Etap 6) & R & R & \textbf{A} \\
+  \hline
+\end{xltabular}
+
+\pagebreak
+
+% \section{Wizualizacje interfejsu graficznego}
+
+\end{document}
