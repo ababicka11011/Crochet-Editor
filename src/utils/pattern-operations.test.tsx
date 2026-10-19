@@ -23,14 +23,14 @@ function chainOf(count: number): Pattern {
 }
 
 describe('addStitch', () => {
-  it('links each new stitch to the previous one with a previous edge pointing old -> new', () => {
+  it('links each new stitch to the previous one with a previous edge pointing new -> old', () => {
     const pattern = chainOf(3);
 
     expect(pattern.cursor).toBe('stitch-2');
     expect(pattern.stitches['stitch-2'].previous).toBe('stitch-1');
     expect(pattern.edges).toEqual([
-      { kind: 'previous', from: 'stitch-0', to: 'stitch-1' },
-      { kind: 'previous', from: 'stitch-1', to: 'stitch-2' },
+      { kind: 'previous', from: 'stitch-1', to: 'stitch-0' },
+      { kind: 'previous', from: 'stitch-2', to: 'stitch-1' },
     ]);
   });
 
