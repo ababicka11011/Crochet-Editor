@@ -77,6 +77,9 @@ Promotor: \\
   \hline
   \textbf{1.1} & 19.10.2026 & Anna Babicka & \textit{Wprowadzenie poprawek po konsultacji z promotorem} \\
   \hline
+  \hline
+  \textbf{1.1} & 20.10.2026 & Wiktor Murawski & \textit{Rozwinięcie opisu rozwiązania i motywacji, poprawa literówek} \\
+  \hline
 \end{tabularx}
 
 \pagebreak
@@ -85,9 +88,23 @@ Promotor: \\
 
 \section{Opis rozwiązania i motywacja}
 
-Celem projektu jest zaprojektowanie, implementacja i ocena intuicyjnej aplikacji webowej do tworzenia schematów szydełkowych, która odciąża użytkownika od ręcznego rozmieszczania symboli dzięki reprezentacji wzorów jako grafów oczek i automatycznemu układowi uwzględniającemu geometrię oczek, umożliwiając szybkie i bezbłędne tworzenie czytelnych schematów wzorów.
+\subsection{Cel projektu}
 
-% <!-- Jak to nazwać? -->
+Celem projektu jest zaprojektowanie, implementacja i ocena intuicyjnej aplikacji webowej do tworzenia schematów szydełkowych 2D. Aplikacja odciąża użytkownika od ręcznego rozmieszczania symboli: wzór jest reprezentowany jako graf oczek, a układ schematu wyznaczany jest automatycznie z uwzględnieniem geometrii oczek, takiej jak proporcje symboli, ich orientacja względem oczka, w które są wbite, oraz odległości między sąsiednimi oczkami. Dzięki temu czytelne i spójne ze strukturą wzoru schematy mają powstawać szybko i bez konieczności ręcznych poprawek.
+
+\subsection{Motywacja}
+
+Schemat jest wygodną, niezależną od języka formą zapisu wzoru, ponieważ bezpośrednio pokazuje relacje między oczkami. Jego tworzenie w dostępnych narzędziach pozostaje jednak w dużej mierze pracą ręczną. Podstawowe rozwiązania opierają się na regularnej siatce, a bardziej zaawansowane na rozmieszczaniu symboli na okręgach, co nie wystarcza dla wzorów o nieregularnym kształcie. Użytkownik musi wówczas samodzielnie przesuwać i obracać symbole, a każda zmiana struktury wzoru może wymagać ponownego dopasowania wielu wcześniej ustawionych elementów.
+
+Ten sam problem pojawia się przy projektowaniu i modyfikowaniu wzorów. Trudno przewidzieć, jak zmiana wpłynie na kształt całej robótki, a sprawdzenie każdego wariantu na szydełku wymaga wielokrotnego prucia i szydełkowania. Narzędzie, które po każdej zmianie struktury natychmiast przelicza i pokazuje schemat, pozwala szybko porównywać warianty bez wykonywania robótki.
+
+\subsection{Użytkownicy docelowi}
+
+Aplikacja jest przeznaczona dla osób projektujących wzory szydełkowe: hobbystów tworzących własne wzory lub modyfikujących istniejące oraz autorów, którzy chcą opublikować lub wydrukować czytelny schemat swojego wzoru. Zakładamy, że użytkownik zna podstawowe ściegi i terminologię szydełkowania, natomiast nie jest wymagana wiedza o grafach ani algorytmach rozmieszczania. Aplikacja działa w przeglądarce, więc nie wymaga instalacji.
+
+\subsection{Proponowane podejście}
+
+Rozwiązanie opiera się na rozdzieleniu logicznej struktury wzoru od jego wizualnej reprezentacji. Użytkownik buduje wzór, dodając oczka i określając, w które elementy są wbite, a aplikacja na tej podstawie automatycznie wyznacza położenie i orientację symboli. Nie zakładamy opracowania nowego algorytmu. Wartość inżynierską projektu stanowi dobór, integracja i dostosowanie istniejących metod (w szczególności algorytmów typu force-directed) do potrzeb interaktywnego edytora. Kluczowym kryterium oceny będzie praktyczna użyteczność: czy aplikacja pozwala uzyskać poprawny schemat szybciej niż ręczne rozmieszczanie symboli w ogólnym narzędziu graficznym.
 
 \pagebreak
 
@@ -101,7 +118,7 @@ Celem projektu jest zaprojektowanie, implementacja i ocena intuicyjnej aplikacji
   \hline
   \textbf{Oczko (ścieg, stitch)} & Podstawowa jednostka robótki, powstająca przez przeciągnięcie nici przez pętle na szydełku. \\
   \hline
-  \textbf{Łańcuszek (ch)} & A Oczko niewbijane w robótkę. Podnosi poziom pracy i tworzy łuki. \\
+  \textbf{Łańcuszek (ch)} & Oczko niewbijane w robótkę. Podnosi poziom pracy i tworzy łuki. \\
   \hline
   \textbf{Oczko ścisłe (sl st)} & Oczko łączące dwa punkty bez zwiększania wysokości. Służy m.in. do zamykania okrążeń. \\
   \hline
@@ -149,7 +166,7 @@ Celem projektu jest zaprojektowanie, implementacja i ocena intuicyjnej aplikacji
   \hline
   \textbf{SVG} & Wektorowy format grafiki, używany do renderowania i eksportu schematów. \\
   \hline
-  \textbf{Undo/redo} & cofanie i ponawianie operacji. \\
+  \textbf{Undo/redo} & Cofanie i ponawianie operacji. \\
   \hline
   \textbf{Web Worker} & Mechanizm przeglądarki do wykonywania obliczeń w osobnym wątku. \\
   \hline
@@ -171,7 +188,7 @@ Zakres projektu został podzielony na MVP (Minimum Viable Product) - kluczowe fu
 
 \begin{enumerate}
   \item \textbf{Graficzny interfejs edytora:} Pozwalający na łatwe i intuicyjne dodawanie, usuwanie i edycję elementów oraz wyświetlanie obecnego stanu wzoru.
-  \item \textbf{Automatyczne rozmieszczanie symboli:} Wyznaczenie wzajemnego położenia symboli odwzorowującego rzeczywiste ich rozmieszczenie po wyszydełkowaniu wzoru za pomocą force-directed algorytmu.
+  \item \textbf{Automatyczne rozmieszczanie symboli:} Wyznaczenie wzajemnego położenia symboli odwzorowującego rzeczywiste ich rozmieszczenie po wyszydełkowaniu wzoru za pomocą algorytmu force-directed.
   \item \textbf{Zapisanie i wczytanie postępów pracy:} Eksport i import danych schematu do pliku np. w formacie JSON, zachowującego informacje strukturalne.
   \item \textbf{Eksport schematu do pliku w formacie graficznym:} Zapisanie gotowego schematu do pliku SVG, konwersja do PDF, PNG, JPEG.
 \end{enumerate}
@@ -369,7 +386,7 @@ Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User S
 
 \pagebreak
 
-\section{Mierzalne wymagania niefunkcjonalne (NFRs \textendash Quantifiable Non-Functional Requirements)}
+\section{Mierzalne wymagania niefunkcjonalne (NFRs -- Quantifiable Non-Functional Requirements)}
 
 Poniższe wymagania niefunkcjonalne opisują oczekiwaną jakość działania systemu. Każde z nich ma mierzalną wartość docelową i określoną metodę weryfikacji. Podane progi są wartościami wstępnymi i mogą zostać skorygowane na podstawie pomiarów prototypu.
 
