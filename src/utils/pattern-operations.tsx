@@ -1,5 +1,8 @@
-import type { Pattern, Stitch, StitchType, StitchId, Insertion, Edge } from '../types/Stitch';
-import type { Result } from '../types/Result';
+import type { Stitch, StitchType, StitchId } from '../model/Stitch';
+import type { Insertion, Edge } from '../model/Edge'
+import type { Pattern } from '../contracts/Pattern';
+import type { Result } from '../model/Result';
+import type { Layout } from '../contracts/Layout';
 
 export function startNewPattern(method: 'ch' | 'mr'): Pattern {
   /*
@@ -14,17 +17,21 @@ export function startNewPattern(method: 'ch' | 'mr'): Pattern {
     type: method,
     layer: 0,
     previous: null,
-    surroundingNodes: null,
-    x: 700, // set starting position for the first stitch
-    y: 320
+    surroundingNodes: null
   };
+
+  const layout: Layout = { 
+    placements: { [initialStitch.id]: {x: 700, y: 320, rotation: 0, sw: 1, sh: 1} },
+    bounds: { minX: 0, minY: 0, maxX: 1000, maxY: 1000}
+  }
 
   // Return the initial pattern object with the first stitch and no edges
   return {
     stitches: { [initialStitch.id]: initialStitch },
     edges: [],
     cursor: initialStitch.id,
-    currentRound: 0
+    currentRound: 0,
+    layout: layout
   };
 }
 
@@ -68,19 +75,26 @@ export function addStitch(pattern: Pattern, type: StitchType,
     layer: pattern.currentRound,
     previous: pattern.cursor,
     surroundingNodes: null, // add hole support later
-    x: anchorId !== undefined ? pattern.stitches[anchorId]?.x
-      : (pattern.stitches[pattern.cursor ?? '']?.x ?? 0) - 20 * (pattern.currentRound % 2 == 0 ? 1 : -1), // compute x based on insertInto and insertion if provided
-    y: 320 - pattern.currentRound * 20,
   };
 
   // previousEdge is not needed since we already have previous in the stitch object, but we can keep it for calculating position.
   const previousEdge: Edge = { kind: 'previous', from: newStitch.id, to: pattern.cursor || '' };
   
+  // Create new layout with position of the new stitch
+  const newLayout: Layout = { ...pattern.layout,
+    placements: { ...pattern.layout.placements, [newStitch.id]: {
+      x: anchorId !== undefined ? pattern.layout.placements[anchorId]?.x
+      : ( pattern.layout.placements[pattern.cursor ?? '']?.x ?? 0) - 20 * (pattern.currentRound % 2 == 0 ? 1 : -1), // compute x based on insertInto and insertion if provided, 
+      y: 320 - pattern.currentRound * 20, 
+      rotation: 0, sw: 1, sh: 1} },
+  }
+
   // Create the new pattern object by adding the new stitch and edge to the existing pattern.
   const newPattern: Pattern = { ...pattern, 
     stitches: { ...pattern.stitches, [newStitch.id]: newStitch }, 
     edges: [...pattern.edges, previousEdge], 
-    cursor: newStitch.id
+    cursor: newStitch.id,
+    layout: newLayout
   };
   
   // If insertInto is provided, create insertion edges for each specified stitch id.
@@ -123,8 +137,15 @@ export function removeLastStitch(pattern: Pattern): Result<Pattern> {
   delete newStitches[pattern.cursor!]; // remove the current (most recent) stitch
   const newEdges = pattern.edges.filter(edge => edge.from !== pattern.cursor && edge.to !== pattern.cursor);
 
+  const newPlacements = { ...pattern.layout.placements }
+  delete newPlacements[pattern.cursor!];
+
+  const newLayout: Layout = { ...pattern.layout,
+    placements: newPlacements,
+  }
+
   // Create the new pattern object with updated stitches, edges, and cursor
-  const newPattern: Pattern = { ...pattern, stitches: newStitches, edges: newEdges, cursor: previousStitchId };
+  const newPattern: Pattern = { ...pattern, stitches: newStitches, edges: newEdges, cursor: previousStitchId, layout: newLayout };
 
   return { ok: true, value: newPattern };
 }
