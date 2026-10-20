@@ -20,6 +20,8 @@
 \usepackage{xltabular}
 \raggedbottom
 
+\usepackage{svg}
+
 % ----------------------------Do wypełnienia ----------------------
 \renewcommand{\title}{Edytor schematów szydełkowych z automatycznym rozmieszczaniem symboli}
 \newcommand{\stage}{Etap 1: Specyfikacja wymagań i określenie zakresu projektu}
@@ -77,7 +79,7 @@ Promotor: \\
   \hline
   \textbf{1.1} & 19.10.2026 & Anna Babicka & \textit{Wprowadzenie poprawek po konsultacji z promotorem} \\
   \hline
-  \textbf{1.2} & 20.10.2026 & Wiktor Murawski & \textit{Rozwinięcie opisu rozwiązania i motywacji, rozwinięcie słownika, poprawa literówek} \\
+  \textbf{1.2} & 20.10.2026 & Wiktor Murawski & \textit{Rozwinięcie opisu rozwiązania i motywacji, rozwinięcie słownika, dodanie diagramu przypadków użycia, poprawa literówek} \\
   \hline
 \end{tabularx}
 
@@ -235,7 +237,36 @@ Zakres projektu został podzielony na MVP (Minimum Viable Product) - kluczowe fu
 
 Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User Stories) i przedstawione na diagramie przypadków użycia. Wymagania dotyczą tylko zakresu MVP, opcjonalne funkcjonalności nie zostały tutaj uwzględnione. W tym przypadku mamy tylko jednego użytkownika - osobę projektującą wzór.
 
-\subsection*{\textbf{US-01: Dodawanie oczka przez kliknięcie}}
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=1.0\textwidth]{img/use_cases.pdf} 
+	\caption{Diagram przypadków użycia}
+	\label{fig:use_cases}
+\end{figure}
+
+
+
+\subsection*{\textbf{US-01: Rozpoczęcie nowego wzoru}}
+
+\noindent\textbf{Jako:} Osoba projektująca wzór,\par
+\noindent\textbf{Chcę:} utworzyć nowy wzór, wybierając sposób jego rozpoczęcia,\par
+\noindent\textbf{Aby:} mieć od czego zacząć dodawanie kolejnych oczek.\par
+
+\begin{quote}
+	\textbf{Kryteria akceptacji (Gherkin):}
+	
+	\textbf{Scenariusz: rozpoczęcie wzoru} \\
+	\textbf{Given:} w edytorze otwarty jest pusty wzór \\
+	\textbf{When:} użytkownik wybiera typ elementu początkowego i podaje jego parametry (zgodnie z tabelą elementów początkowych) \\
+	\textbf{Then:} do wzoru zostają dodane elementy początkowe, pozycja nici wskazuje ostatni z nich, a bieżąca warstwa ma numer 1
+	
+	\textbf{Scenariusz: nowy wzór przy niezapisanych zmianach} \\
+	\textbf{Given:} bieżący wzór ma niezapisane zmiany \\
+	\textbf{When:} użytkownik wybiera opcję „Nowy wzór" \\
+	\textbf{Then:} wyświetla się potwierdzenie utraty zmian, a po jego odrzuceniu bieżący wzór pozostaje niezmieniony
+\end{quote}
+
+\subsection*{\textbf{US-02: Dodawanie oczka przez kliknięcie}}
 
 \noindent\textbf{Jako:} Osoba projektująca wzór,\\
 \noindent\textbf{Chcę:} wybrać typ elementu z palety symboli i dodać go, klikając na element, w który chcę go wbić, \\
@@ -255,7 +286,7 @@ Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User S
 \textbf{Then:} wzór pozostaje bez zmian i wyświetla się komunikat z przyczyną
 \end{quote}
 
-\subsection*{\textbf{US-02: Usuwanie i edycja oczek}}
+\subsection*{\textbf{US-03: Usuwanie i edycja oczek}}
 
 \noindent\textbf{Jako:} Osoba projektująca wzór,\par
 \noindent\textbf{Chcę:} usuwać oczka i zmieniać ich właściwości,\par
@@ -275,7 +306,7 @@ Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User S
 \textbf{Then:} oczko zmienia typ, a jego połączenia pozostają bez zmian i układ symboli zostaje przeliczony
 \end{quote}
 
-\subsection*{\textbf{US-03: Dodawanie i łączenie oczek}}
+\subsection*{\textbf{US-04: Dodawanie i łączenie oczek}}
 
 \noindent\textbf{Jako:} Osoba projektująca wzór,\par
 \noindent\textbf{Chcę:} dodawać kilka oczek w jedno miejsce i łączyć oczka,\par
@@ -295,7 +326,7 @@ Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User S
 \textbf{Then:} zostaje dodany jeden półsłupek wbity we wszystkie zaznaczone oczka, a jego symbol odzwierciedla łączenie
 \end{quote}
 
-\subsection*{\textbf{US-04: Zmiana okrążenia/rzędu}}
+\subsection*{\textbf{US-05: Zmiana okrążenia/rzędu}}
 
 \noindent\textbf{Jako:} Osoba projektująca wzór,\par
 \noindent\textbf{Chcę:} zakończyć okrążenie/rząd i rozpocząć następne,\par
@@ -310,7 +341,7 @@ Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User S
 \textbf{Then:} numer bieżącej warstwy wynosi \textit{n+1} i dodawane elementy mają przypisany numer warstwy \textit{n+1}.
 \end{quote}
 
-\subsection*{\textbf{US-05: Operacje undo/redo}}
+\subsection*{\textbf{US-06: Operacje undo/redo}}
 
 \noindent\textbf{Jako:} Osoba projektująca wzór,\par
 \noindent\textbf{Chcę:} cofać i ponawiać operacje,\par
@@ -330,7 +361,7 @@ Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User S
 \textbf{Then:} wzór wraca do stanu po tej operacji
 \end{quote}
 
-\subsection*{\textbf{US-06: Przesuwanie i skalowanie wzoru}}
+\subsection*{\textbf{US-07: Przesuwanie i skalowanie wzoru}}
 
 \noindent\textbf{Jako:} Osoba projektująca wzór,\par
 \noindent\textbf{Chcę:} przesuwać i przybliżać schemat,\par
@@ -350,7 +381,7 @@ Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User S
 \textbf{Then:} widok przesuwa się zgodnie z ruchem kursora
 \end{quote}
 
-\subsection*{\textbf{US-07: Automatyczne rozmieszczanie symboli}}
+\subsection*{\textbf{US-08: Automatyczne rozmieszczanie symboli}}
 
 \noindent\textbf{Jako:} Osoba projektująca wzór,\par
 \noindent\textbf{Chcę:} aby symbole układały się automatycznie po wprowadzeniu zmian,\par
@@ -375,7 +406,7 @@ Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User S
 \textbf{Then:} interfejs reaguje na działania użytkownika (przewijanie, przybliżanie, wybór w palecie)
 \end{quote}
 
-\subsection*{\textbf{US-08: Zapis i odczyt}}
+\subsection*{\textbf{US-09: Zapis i odczyt}}
 
 \noindent\textbf{Jako:} Osoba projektująca wzór,\par
 \noindent\textbf{Chcę:} zapisać projekt do pliku i ponownie go otworzyć,\par
@@ -400,7 +431,7 @@ Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User S
 \textbf{Then:} pojawia się ostrzeżenie o utracie zmian
 \end{quote}
 
-\subsection*{\textbf{US-09: Eksport do pliku graficznego}}
+\subsection*{\textbf{US-10: Eksport do pliku graficznego}}
 
 \noindent\textbf{Jako:} Osoba projektująca wzór,\par
 \noindent\textbf{Chcę:} wyeksportować schemat do pliku SVG, PDF, PNG lub JPEG,\par
