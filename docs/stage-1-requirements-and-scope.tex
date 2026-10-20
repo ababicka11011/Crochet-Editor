@@ -20,6 +20,8 @@
 \usepackage{xltabular}
 \raggedbottom
 
+\usepackage{svg}
+
 % ----------------------------Do wypełnienia ----------------------
 \renewcommand{\title}{Edytor schematów szydełkowych z automatycznym rozmieszczaniem symboli}
 \newcommand{\stage}{Etap 1: Specyfikacja wymagań i określenie zakresu projektu}
@@ -56,7 +58,7 @@ Promotor: \\
 {\Large \supervisor}
 
 \vfill
-19.10.2026 \\
+\today \\
 \vspace{20pt}
 
 \end{center}
@@ -77,6 +79,8 @@ Promotor: \\
   \hline
   \textbf{1.1} & 19.10.2026 & Anna Babicka & \textit{Wprowadzenie poprawek po konsultacji z promotorem} \\
   \hline
+  \textbf{1.2} & 20.10.2026 & Wiktor Murawski & \textit{Rozwinięcie opisu rozwiązania i motywacji, rozwinięcie słownika, dodanie diagramu przypadków użycia, poprawa literówek} \\
+  \hline
 \end{tabularx}
 
 \pagebreak
@@ -85,19 +89,23 @@ Promotor: \\
 
 \section{Opis rozwiązania i motywacja}
 
-% Celem projektu jest zaprojektowanie, implementacja i ocena intuicyjnej aplikacji webowej do tworzenia schematów szydełkowych, która odciąża użytkownika od ręcznego rozmieszczania symboli dzięki reprezentacji wzorów jako grafów oczek i automatycznemu układowi uwzględniającemu geometrię oczek, umożliwiając szybkie i bezbłędne tworzenie czytelnych schematów wzorów.
+\subsection{Cel projektu}
 
-Szydełkowanie jest techniką rękodzielniczą, w której robótka powstaje z kolejno wykonywanych oczek. Rodzaj każdego oczka i miejsce jego wbicia decydują o kształcie całego wyrobu. Wzory zapisuje się zwykle jako opis tekstowy lub schemat, czyli diagram, w którym standardowe symbole oznaczają rodzaje oczek, a ich położenie i orientacja pokazują wzajemne powiązania. Schemat jest często łatwiejszy do odczytania niż tekst, ponieważ bezpośrednio przedstawia strukturę robótki i nie zależy od języka.
+Celem projektu jest zaprojektowanie, implementacja i ocena intuicyjnej aplikacji webowej do tworzenia schematów szydełkowych 2D. Aplikacja odciąża użytkownika od ręcznego rozmieszczania symboli: wzór jest reprezentowany jako graf oczek, a układ schematu wyznaczany jest automatycznie z uwzględnieniem geometrii oczek, takiej jak proporcje symboli, ich orientacja względem oczka, w które są wbite, oraz odległości między sąsiednimi oczkami. Dzięki temu czytelne i spójne ze strukturą wzoru schematy mają powstawać szybko i bez konieczności ręcznych poprawek.
 
-Motywacją do podjęcia tematu jest problem napotykany przy samodzielnym projektowaniu wzorów. Trudno przewidzieć, jak zmiana liczby lub rodzaju oczek wpłynie na kształt robótki, a sprawdzenie kolejnych wariantów wymaga ich wykonania, a często także sprucia i ponownego szydełkowania. Szybki podgląd wariantów na komputerze mógłby znacząco skrócić ten proces.
+\subsection{Motywacja}
 
-Istniejące narzędzia oferują gotowe symbole, siatki i funkcje wyrównywania, jednak rozmieszczanie symboli pozostaje w dużej mierze pracą ręczną. Jest to szczególnie pracochłonne we wzorach o nieregularnej geometrii, takich jak okrągłe serwetki, a każda zmiana struktury wzoru może wymagać ponownego dopasowania wielu elementów.
+Schemat jest wygodną, niezależną od języka formą zapisu wzoru, ponieważ bezpośrednio pokazuje relacje między oczkami. Jego tworzenie w dostępnych narzędziach pozostaje jednak w dużej mierze pracą ręczną. Podstawowe rozwiązania opierają się na regularnej siatce, a bardziej zaawansowane na rozmieszczaniu symboli na okręgach, co nie wystarcza dla wzorów o nieregularnym kształcie. Użytkownik musi wówczas samodzielnie przesuwać i obracać symbole, a każda zmiana struktury wzoru może wymagać ponownego dopasowania wielu wcześniej ustawionych elementów.
 
-Celem projektu jest zaprojektowanie, implementacja i ocena intuicyjnej aplikacji webowej do tworzenia schematów szydełkowych, która odciąża użytkownika od ręcznego rozmieszczania symboli. Użytkownik buduje wzór podobnie jak podczas szydełkowania, wybierając rodzaj oczka i miejsce jego wbicia. Aplikacja zapisuje tę strukturę jako graf oczek, a moduł automatycznego rozmieszczania wyznacza na jej podstawie położenie, orientację i proporcje symboli z uwzględnieniem geometrii oczek. Użytkownik może ręcznie skorygować wynik tam, gdzie okaże się niewystarczający.
+Ten sam problem pojawia się przy projektowaniu i modyfikowaniu wzorów. Trudno przewidzieć, jak zmiana wpłynie na kształt całej robótki, a sprawdzenie każdego wariantu na szydełku wymaga wielokrotnego prucia i szydełkowania. Narzędzie, które po każdej zmianie struktury natychmiast przelicza i pokazuje schemat, pozwala szybko porównywać warianty bez wykonywania robótki.
 
-Rozwiązanie opiera się na istniejących pracach dotyczących grafowej reprezentacji wzorów szydełkowych i rozmieszczania ich elementów algorytmami typu force-directed. Celem nie jest opracowanie nowej metody, lecz dobór, integracja i dostosowanie istniejących rozwiązań do potrzeb interaktywnego edytora, który pozwoli szybciej tworzyć czytelne schematy i swobodnie eksperymentować ze strukturą wzoru.
+\subsection{Użytkownicy docelowi}
 
-% <!-- Jak to nazwać? -->
+Aplikacja jest przeznaczona dla osób projektujących wzory szydełkowe: hobbystów tworzących własne wzory lub modyfikujących istniejące oraz autorów, którzy chcą opublikować lub wydrukować czytelny schemat swojego wzoru. Zakładamy, że użytkownik zna podstawowe ściegi i terminologię szydełkowania, natomiast nie jest wymagana wiedza o grafach ani algorytmach rozmieszczania. Aplikacja działa w przeglądarce, więc nie wymaga instalacji.
+
+\subsection{Proponowane podejście}
+
+Rozwiązanie opiera się na rozdzieleniu logicznej struktury wzoru od jego wizualnej reprezentacji. Użytkownik buduje wzór, dodając oczka i określając, w które elementy są wbite, a aplikacja na tej podstawie automatycznie wyznacza położenie i orientację symboli. Nie zakładamy opracowania nowego algorytmu. Wartość inżynierską projektu stanowi dobór, integracja i dostosowanie istniejących metod (w szczególności algorytmów typu force-directed) do potrzeb interaktywnego edytora. Kluczowym kryterium oceny będzie praktyczna użyteczność: czy aplikacja pozwala uzyskać poprawny schemat szybciej niż ręczne rozmieszczanie symboli w ogólnym narzędziu graficznym.
 
 \pagebreak
 
@@ -111,7 +119,7 @@ Rozwiązanie opiera się na istniejących pracach dotyczących grafowej reprezen
   \hline
   \textbf{Oczko (ścieg, stitch)} & Podstawowa jednostka robótki, powstająca przez przeciągnięcie nici przez pętle na szydełku. \\
   \hline
-  \textbf{Łańcuszek (ch)} & A Oczko niewbijane w robótkę. Podnosi poziom pracy i tworzy łuki. \\
+  \textbf{Łańcuszek (ch)} & Oczko niewbijane w robótkę. Podnosi poziom pracy i tworzy łuki. \\
   \hline
   \textbf{Oczko ścisłe (sl st)} & Oczko łączące dwa punkty bez zwiększania wysokości. Służy m.in. do zamykania okrążeń. \\
   \hline
@@ -151,6 +159,8 @@ Rozwiązanie opiera się na istniejących pracach dotyczących grafowej reprezen
   \hline
   \textbf{Kalibracja} & Dopasowanie parametrów geometrii do włóczki i napięcia użytkownika na podstawie próbki. \\
   \hline
+  \textbf{Seed (ziarno)} & Wartość początkowa generatora liczb pseudolosowych. Ten sam seed i dane wejściowe dają ten sam wynik algorytmu. \\
+  \hline
 \end{tabularx}
 
 \subsection{Technologie i jakość}
@@ -161,7 +171,7 @@ Rozwiązanie opiera się na istniejących pracach dotyczących grafowej reprezen
   \hline
   \textbf{SVG} & Wektorowy format grafiki, używany do renderowania i eksportu schematów. \\
   \hline
-  \textbf{Undo/redo} & cofanie i ponawianie operacji. \\
+  \textbf{Undo/redo} & Cofanie i ponawianie operacji. \\
   \hline
   \textbf{Web Worker} & Mechanizm przeglądarki do wykonywania obliczeń w osobnym wątku. \\
   \hline
@@ -171,6 +181,30 @@ Rozwiązanie opiera się na istniejących pracach dotyczących grafowej reprezen
   \hline
   \textbf{Percentyl (p95)} & Wartość, poniżej której mieści się 95\% pomiarów. \\
   \hline
+  \textbf{JSON} & Tekstowy format wymiany danych, używany do zapisu i wczytywania projektu. \\
+  \hline
+  \textbf{Paleta symboli} & Panel interfejsu, z którego użytkownik wybiera typ oczka do dodania. \\
+  \hline
+  \textbf{FPS (frames per second)} & Liczba klatek obrazu wyświetlanych na sekundę. Miara płynności interfejsu. \\
+  \hline
+\end{tabularx}
+
+\subsection{Dokumentacja i zarządzanie projektem}
+
+\begin{tabularx}{0.95\textwidth}{|p{5cm}|X|}
+	\hline
+	\textbf{Termin} & \textbf{Definicja} \\
+	\hline
+	\textbf{Historyjka użytkownika (US, User Story)} & Krótki opis funkcji z perspektywy użytkownika w formie: jako \dots, chcę \dots, aby \dots. \\
+	\hline
+	\textbf{Kryteria akceptacji} & Warunki, które musi spełniać funkcja, aby uznać historyjkę za zrealizowaną. \\
+	\hline
+	\textbf{Gherkin} & Format zapisu kryteriów akceptacji w postaci scenariuszy Given (stan początkowy), When (akcja), Then (oczekiwany wynik). \\
+	\hline
+	\textbf{SWOT} & Analiza mocnych i słabych stron projektu oraz szans i zagrożeń z jego otoczenia. \\
+	\hline
+	\textbf{RACI} & Macierz przypisująca zadaniom role: wykonawca (R), odpowiedzialny (A), konsultowany (C), informowany (I). \\
+	\hline
 \end{tabularx}
 
 \pagebreak
@@ -183,7 +217,7 @@ Zakres projektu został podzielony na MVP (Minimum Viable Product) - kluczowe fu
 
 \begin{enumerate}
   \item \textbf{Graficzny interfejs edytora:} Pozwalający na łatwe i intuicyjne dodawanie, usuwanie i edycję elementów oraz wyświetlanie obecnego stanu wzoru.
-  \item \textbf{Automatyczne rozmieszczanie symboli:} Wyznaczenie wzajemnego położenia symboli odwzorowującego rzeczywiste ich rozmieszczenie po wyszydełkowaniu wzoru za pomocą force-directed algorytmu.
+  \item \textbf{Automatyczne rozmieszczanie symboli:} Wyznaczenie wzajemnego położenia symboli odwzorowującego rzeczywiste ich rozmieszczenie po wyszydełkowaniu wzoru za pomocą algorytmu force-directed.
   \item \textbf{Zapisanie i wczytanie postępów pracy:} Eksport i import danych schematu do pliku np. w formacie JSON, zachowującego informacje strukturalne.
   \item \textbf{Eksport schematu do pliku w formacie graficznym:} Zapisanie gotowego schematu do pliku SVG, konwersja do PDF, PNG, JPEG.
 \end{enumerate}
@@ -212,7 +246,36 @@ Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User S
 \end{figure}
 
 
-\subsection*{\textbf{US-01: Dodawanie oczka przez kliknięcie}}
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=1.0\textwidth]{img/use_cases.pdf} 
+	\caption{Diagram przypadków użycia}
+	\label{fig:use_cases}
+\end{figure}
+
+
+
+\subsection*{\textbf{US-01: Rozpoczęcie nowego wzoru}}
+
+\noindent\textbf{Jako:} Osoba projektująca wzór,\par
+\noindent\textbf{Chcę:} utworzyć nowy wzór, wybierając sposób jego rozpoczęcia,\par
+\noindent\textbf{Aby:} mieć od czego zacząć dodawanie kolejnych oczek.\par
+
+\begin{quote}
+	\textbf{Kryteria akceptacji (Gherkin):}
+	
+	\textbf{Scenariusz: rozpoczęcie wzoru} \\
+	\textbf{Given:} w edytorze otwarty jest pusty wzór \\
+	\textbf{When:} użytkownik wybiera typ elementu początkowego i podaje jego parametry (zgodnie z tabelą elementów początkowych) \\
+	\textbf{Then:} do wzoru zostają dodane elementy początkowe, pozycja nici wskazuje ostatni z nich, a bieżąca warstwa ma numer 1
+	
+	\textbf{Scenariusz: nowy wzór przy niezapisanych zmianach} \\
+	\textbf{Given:} bieżący wzór ma niezapisane zmiany \\
+	\textbf{When:} użytkownik wybiera opcję „Nowy wzór" \\
+	\textbf{Then:} wyświetla się potwierdzenie utraty zmian, a po jego odrzuceniu bieżący wzór pozostaje niezmieniony
+\end{quote}
+
+\subsection*{\textbf{US-02: Dodawanie oczka przez kliknięcie}}
 
 \noindent\textbf{Jako:} Osoba projektująca wzór,\\
 \noindent\textbf{Chcę:} wybrać typ elementu z palety symboli i dodać go, klikając na element, w który chcę go wbić, \\
@@ -221,17 +284,18 @@ Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User S
 \begin{quote}
 \textbf{Kryteria akceptacji (Gherkin):}
 
+\textbf{Scenariusz: dodanie oczka} \\
 \textbf{Given:} wzór zawiera co najmniej jeden element, a w palecie wybrany jest słupek \\
 \textbf{When:} użytkownik klika symbol na schemacie \\
 \textbf{Then:} do wzoru zostaje dodany słupek wbity w kliknięty element, a na schemacie pojawia się nowy symbol.
 
 \textbf{Scenariusz: niedozwolone wbicie} \\
-\textbf{Given:} wybrany typ nie może być wbity we wskazane miejsce \\
-\textbf{When:} wybrany jest typ elementu, którego nie można wbić we wskazane miejsce \\
-\textbf{Then:} wzór pozostaje bez zmian i wyświetla się komunikat z przyczyną \\
+\textbf{Given:} wzór zawiera co najmniej jeden element, a w palecie wybrany jest typ oczka \\
+\textbf{When:} użytkownik klika element, w który oczka tego typu nie można wbić (zgodnie z regułami modelu) \\
+\textbf{Then:} wzór pozostaje bez zmian i wyświetla się komunikat z przyczyną
 \end{quote}
 
-\subsection*{\textbf{US-02: Usuwanie i edycja oczek}}
+\subsection*{\textbf{US-03: Usuwanie i edycja oczek}}
 
 \noindent\textbf{Jako:} Osoba projektująca wzór,\par
 \noindent\textbf{Chcę:} usuwać oczka i zmieniać ich właściwości,\par
@@ -251,7 +315,7 @@ Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User S
 \textbf{Then:} oczko zmienia typ, a jego połączenia pozostają bez zmian i układ symboli zostaje przeliczony
 \end{quote}
 
-\subsection*{\textbf{US-03: Dodawanie i łączenie oczek}}
+\subsection*{\textbf{US-04: Dodawanie i łączenie oczek}}
 
 \noindent\textbf{Jako:} Osoba projektująca wzór,\par
 \noindent\textbf{Chcę:} dodawać kilka oczek w jedno miejsce i łączyć oczka,\par
@@ -271,7 +335,7 @@ Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User S
 \textbf{Then:} zostaje dodany jedno oczko wybranego typu wbite we wszystkie zaznaczone oczka, a jego symbol odzwierciedla łączenie
 \end{quote}
 
-\subsection*{\textbf{US-04: Zmiana okrążenia/rzędu}}
+\subsection*{\textbf{US-05: Zmiana okrążenia/rzędu}}
 
 \noindent\textbf{Jako:} Osoba projektująca wzór,\par
 \noindent\textbf{Chcę:} zakończyć okrążenie/rząd i rozpocząć następne,\par
@@ -280,12 +344,13 @@ Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User S
 \begin{quote}
 \textbf{Kryteria akceptacji (Gherkin):}
 
+\textbf{Scenariusz: rozpoczęcie nowej warstwy} \\
 \textbf{Given:} bieżąca warstwa ma numer \textit{n} i zawiera co najmniej jeden element \\
 \textbf{When:} użytkownik wybiera opcję "nowa warstwa" \\
 \textbf{Then:} numer bieżącej warstwy wynosi \textit{n+1} i dodawane elementy mają przypisany numer warstwy \textit{n+1}.
 \end{quote}
 
-\subsection*{\textbf{US-05: Operacje undo/redo}}
+\subsection*{\textbf{US-06: Operacje undo/redo}}
 
 \noindent\textbf{Jako:} Osoba projektująca wzór,\par
 \noindent\textbf{Chcę:} cofać i ponawiać operacje,\par
@@ -305,7 +370,7 @@ Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User S
 \textbf{Then:} wzór wraca do stanu po tej operacji
 \end{quote}
 
-\subsection*{\textbf{US-06: Przesuwanie i skalowanie wzoru}}
+\subsection*{\textbf{US-07: Przesuwanie i skalowanie wzoru}}
 
 \noindent\textbf{Jako:} Osoba projektująca wzór,\par
 \noindent\textbf{Chcę:} przesuwać i przybliżać schemat,\par
@@ -316,7 +381,7 @@ Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User S
 
 \textbf{Scenariusz: przybliżanie i oddalanie} \\
 \textbf{Given:} schemat jest wyświetlony \\
-\textbf{When:} użytkownik obraca kółkiem myszy albo klika "+" lub "-" \\
+\textbf{When:} użytkownik obraca kółkiem myszy albo klika "\text{+}" lub "\text{-}" \\
 \textbf{Then:} widok przybliża się lub oddala względem pozycji kursora albo środka widoku i aktualna skala jest widoczna w interfejsie
 
 \textbf{Scenariusz: przesuwanie widoku} \\
@@ -325,7 +390,7 @@ Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User S
 \textbf{Then:} widok przesuwa się zgodnie z ruchem kursora
 \end{quote}
 
-\subsection*{\textbf{US-07: Automatyczne rozmieszczanie symboli}}
+\subsection*{\textbf{US-08: Automatyczne rozmieszczanie symboli}}
 
 \noindent\textbf{Jako:} Osoba projektująca wzór,\par
 \noindent\textbf{Chcę:} aby symbole układały się automatycznie po wprowadzeniu zmian,\par
@@ -334,6 +399,7 @@ Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User S
 \begin{quote}
 \textbf{Kryteria akceptacji (Gherkin):}
 
+\textbf{Scenariusz: przeliczenie układu po zmianie} \\
 \textbf{Given:} wzór jest wyświetlony na schemacie \\
 \textbf{When:} użytkownik modyfikuje wzór \\
 \textbf{Then:} układ symboli zostaje przeliczony i wyświetlają się one w zaktualizowanych pozycjach
@@ -349,7 +415,7 @@ Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User S
 \textbf{Then:} interfejs reaguje na działania użytkownika (przewijanie, przybliżanie, wybór w palecie)
 \end{quote}
 
-\subsection*{\textbf{US-08: Zapis i odczyt}}
+\subsection*{\textbf{US-09: Zapis i odczyt}}
 
 \noindent\textbf{Jako:} Osoba projektująca wzór,\par
 \noindent\textbf{Chcę:} zapisać projekt do pliku i ponownie go otworzyć,\par
@@ -358,6 +424,7 @@ Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User S
 \begin{quote}
 \textbf{Kryteria akceptacji (Gherkin):}
 
+\textbf{Scenariusz: zapis i ponowne wczytanie} \\
 \textbf{Given:} użytkownik utworzył wzór \\
 \textbf{When:} zapisuje projekt do pliku, a następnie go wczytuje \\
 \textbf{Then:} wzór, pozycja nici i numer bieżącego okrążenia pozostają takie same jak przed zapisem
@@ -373,15 +440,16 @@ Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User S
 \textbf{Then:} pojawia się ostrzeżenie o utracie zmian
 \end{quote}
 
-\subsection*{\textbf{US-09: Eksport do pliku graficznego}}
+\subsection*{\textbf{US-10: Eksport do pliku graficznego}}
 
 \noindent\textbf{Jako:} Osoba projektująca wzór,\par
-\noindent\textbf{Chcę:} wyeksportować schemat do pliku SVG, PDF lub PNG,\par
+\noindent\textbf{Chcę:} wyeksportować schemat do pliku SVG, PDF, PNG lub JPEG,\par
 \noindent\textbf{Aby:} go wydrukować lub opublikować.\par
 
 \begin{quote}
 \textbf{Kryteria akceptacji (Gherkin):}
 
+\textbf{Scenariusz: eksport schematu}
 \textbf{Given:} wzór zawiera co najmniej jedno oczko \\
 \textbf{When:} użytkownik wybiera eksport do wybranego formatu \\
 \textbf{Then:} w razie potrzeby wzór jest konwertowany do wybranego formatu, zostaje pobrany plik z całym schematem, niezależnie od bieżącego przybliżenia widoku.
@@ -389,7 +457,7 @@ Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User S
 
 \pagebreak
 
-\section{Mierzalne wymagania niefunkcjonalne (NFRs \textendash Quantifiable Non-Functional Requirements)}
+\section{Mierzalne wymagania niefunkcjonalne (NFRs -- Quantifiable Non-Functional Requirements)}
 
 Poniższe wymagania niefunkcjonalne opisują oczekiwaną jakość działania systemu. Każde z nich ma mierzalną wartość docelową i określoną metodę weryfikacji. Podane progi są wartościami wstępnymi i mogą zostać skorygowane na podstawie pomiarów prototypu.
 
