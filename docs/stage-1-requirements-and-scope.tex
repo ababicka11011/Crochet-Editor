@@ -85,7 +85,17 @@ Promotor: \\
 
 \section{Opis rozwiązania i motywacja}
 
-Celem projektu jest zaprojektowanie, implementacja i ocena intuicyjnej aplikacji webowej do tworzenia schematów szydełkowych, która odciąża użytkownika od ręcznego rozmieszczania symboli dzięki reprezentacji wzorów jako grafów oczek i automatycznemu układowi uwzględniającemu geometrię oczek, umożliwiając szybkie i bezbłędne tworzenie czytelnych schematów wzorów.
+% Celem projektu jest zaprojektowanie, implementacja i ocena intuicyjnej aplikacji webowej do tworzenia schematów szydełkowych, która odciąża użytkownika od ręcznego rozmieszczania symboli dzięki reprezentacji wzorów jako grafów oczek i automatycznemu układowi uwzględniającemu geometrię oczek, umożliwiając szybkie i bezbłędne tworzenie czytelnych schematów wzorów.
+
+Szydełkowanie jest techniką rękodzielniczą, w której robótka powstaje z kolejno wykonywanych oczek. Rodzaj każdego oczka i miejsce jego wbicia decydują o kształcie całego wyrobu. Wzory zapisuje się zwykle jako opis tekstowy lub schemat, czyli diagram, w którym standardowe symbole oznaczają rodzaje oczek, a ich położenie i orientacja pokazują wzajemne powiązania. Schemat jest często łatwiejszy do odczytania niż tekst, ponieważ bezpośrednio przedstawia strukturę robótki i nie zależy od języka.
+
+Motywacją do podjęcia tematu jest problem napotykany przy samodzielnym projektowaniu wzorów. Trudno przewidzieć, jak zmiana liczby lub rodzaju oczek wpłynie na kształt robótki, a sprawdzenie kolejnych wariantów wymaga ich wykonania, a często także sprucia i ponownego szydełkowania. Szybki podgląd wariantów na komputerze mógłby znacząco skrócić ten proces.
+
+Istniejące narzędzia oferują gotowe symbole, siatki i funkcje wyrównywania, jednak rozmieszczanie symboli pozostaje w dużej mierze pracą ręczną. Jest to szczególnie pracochłonne we wzorach o nieregularnej geometrii, takich jak okrągłe serwetki, a każda zmiana struktury wzoru może wymagać ponownego dopasowania wielu elementów.
+
+Celem projektu jest zaprojektowanie, implementacja i ocena intuicyjnej aplikacji webowej do tworzenia schematów szydełkowych, która odciąża użytkownika od ręcznego rozmieszczania symboli. Użytkownik buduje wzór podobnie jak podczas szydełkowania, wybierając rodzaj oczka i miejsce jego wbicia. Aplikacja zapisuje tę strukturę jako graf oczek, a moduł automatycznego rozmieszczania wyznacza na jej podstawie położenie, orientację i proporcje symboli z uwzględnieniem geometrii oczek. Użytkownik może ręcznie skorygować wynik tam, gdzie okaże się niewystarczający.
+
+Rozwiązanie opiera się na istniejących pracach dotyczących grafowej reprezentacji wzorów szydełkowych i rozmieszczania ich elementów algorytmami typu force-directed. Celem nie jest opracowanie nowej metody, lecz dobór, integracja i dostosowanie istniejących rozwiązań do potrzeb interaktywnego edytora, który pozwoli szybciej tworzyć czytelne schematy i swobodnie eksperymentować ze strukturą wzoru.
 
 % <!-- Jak to nazwać? -->
 
@@ -111,7 +121,9 @@ Celem projektu jest zaprojektowanie, implementacja i ocena intuicyjnej aplikacji
   \hline
   \textbf{Magiczne kółko (mr)} & Technika rozpoczęcia robótki okrężnej z zaciąganą pętlą. \\
   \hline
-  \textbf{Okrążenie / rząd (warstwa)} & Kolejna warstwa oczek wykonywana po okręgu lub w linii. \\
+  \textbf{Okrążenie / rząd} & Grupa oczek tworzonych sukcesywnie, wykonywana po okręgu lub w linii. \\
+  \hline
+  \textbf{Warstwa} & Reprezentacja okrążenia lub rzędu w modelu aplikacji. Model nie rozróżnia tych dwóch technik; różnią się one jedynie sposobem przejścia do kolejnej warstwy. \\
   \hline
   \textbf{Dodawanie / łączenie (increase / decrease)} & Zwiększanie lub zmniejszanie liczby oczek w warstwie. \\
   \hline
@@ -193,6 +205,13 @@ Zakres projektu został podzielony na MVP (Minimum Viable Product) - kluczowe fu
 
 Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User Stories) i przedstawione na diagramie przypadków użycia. Wymagania dotyczą tylko zakresu MVP, opcjonalne funkcjonalności nie zostały tutaj uwzględnione. W tym przypadku mamy tylko jednego użytkownika - osobę projektującą wzór.
 
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{img/Use_case_diagram.png}
+  \caption{Diagram przypadków użycia dla aplikacji}
+\end{figure}
+
+
 \subsection*{\textbf{US-01: Dodawanie oczka przez kliknięcie}}
 
 \noindent\textbf{Jako:} Osoba projektująca wzór,\\
@@ -207,6 +226,7 @@ Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User S
 \textbf{Then:} do wzoru zostaje dodany słupek wbity w kliknięty element, a na schemacie pojawia się nowy symbol.
 
 \textbf{Scenariusz: niedozwolone wbicie} \\
+\textbf{Given:} wybrany typ nie może być wbity we wskazane miejsce \\
 \textbf{When:} wybrany jest typ elementu, którego nie można wbić we wskazane miejsce \\
 \textbf{Then:} wzór pozostaje bez zmian i wyświetla się komunikat z przyczyną \\
 \end{quote}
@@ -243,12 +263,12 @@ Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User S
 \textbf{Scenariusz: dodawanie oczek w jedno miejsce} \\
 \textbf{Given:} w palecie wybrany jest typ oczka pozwalający na wbicie \\
 \textbf{When:} użytkownik klika to samo oczko kilka razy z rzędu \\
-\textbf{Then:} każde kliknięcie dodaje nowy słupek wbity w to samo oczko i symbole rozkładają się wachlarzowo nad oczkiem bazowym
+\textbf{Then:} każde kliknięcie dodaje nowe oczko wybranego typu wbity w to samo oczko i symbole rozkładają się wachlarzowo nad oczkiem bazowym
 
 \textbf{Scenariusz: łączenie kilku oczek} \\
 \textbf{Given:} w palecie wybrany jest typ oczka pozwalający na wbicie, a tryb łączenia jest włączony \\
 \textbf{When:} użytkownik zaznacza kolejno dwa lub więcej sąsiednich oczek i zatwierdza wybór \\
-\textbf{Then:} zostaje dodany jeden półsłupek wbity we wszystkie zaznaczone oczka, a jego symbol odzwierciedla łączenie
+\textbf{Then:} zostaje dodany jedno oczko wybranego typu wbite we wszystkie zaznaczone oczka, a jego symbol odzwierciedla łączenie
 \end{quote}
 
 \subsection*{\textbf{US-04: Zmiana okrążenia/rzędu}}
