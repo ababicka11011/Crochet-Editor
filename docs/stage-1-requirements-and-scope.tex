@@ -56,7 +56,7 @@ Promotor: \\
 {\Large \supervisor}
 
 \vfill
-19.10.2026 \\
+\today \\
 \vspace{20pt}
 
 \end{center}
@@ -77,8 +77,7 @@ Promotor: \\
   \hline
   \textbf{1.1} & 19.10.2026 & Anna Babicka & \textit{Wprowadzenie poprawek po konsultacji z promotorem} \\
   \hline
-  \hline
-  \textbf{1.1} & 20.10.2026 & Wiktor Murawski & \textit{Rozwinięcie opisu rozwiązania i motywacji, poprawa literówek} \\
+  \textbf{1.2} & 20.10.2026 & Wiktor Murawski & \textit{Rozwinięcie opisu rozwiązania i motywacji, rozwinięcie słownika, poprawa literówek} \\
   \hline
 \end{tabularx}
 
@@ -156,6 +155,8 @@ Rozwiązanie opiera się na rozdzieleniu logicznej struktury wzoru od jego wizua
   \hline
   \textbf{Kalibracja} & Dopasowanie parametrów geometrii do włóczki i napięcia użytkownika na podstawie próbki. \\
   \hline
+  \textbf{Seed (ziarno)} & Wartość początkowa generatora liczb pseudolosowych. Ten sam seed i dane wejściowe dają ten sam wynik algorytmu. \\
+  \hline
 \end{tabularx}
 
 \subsection{Technologie i jakość}
@@ -176,6 +177,30 @@ Rozwiązanie opiera się na rozdzieleniu logicznej struktury wzoru od jego wizua
   \hline
   \textbf{Percentyl (p95)} & Wartość, poniżej której mieści się 95\% pomiarów. \\
   \hline
+  \textbf{JSON} & Tekstowy format wymiany danych, używany do zapisu i wczytywania projektu. \\
+  \hline
+  \textbf{Paleta symboli} & Panel interfejsu, z którego użytkownik wybiera typ oczka do dodania. \\
+  \hline
+  \textbf{FPS (frames per second)} & Liczba klatek obrazu wyświetlanych na sekundę. Miara płynności interfejsu. \\
+  \hline
+\end{tabularx}
+
+\subsection{Dokumentacja i zarządzanie projektem}
+
+\begin{tabularx}{0.95\textwidth}{|p{5cm}|X|}
+	\hline
+	\textbf{Termin} & \textbf{Definicja} \\
+	\hline
+	\textbf{Historyjka użytkownika (US, User Story)} & Krótki opis funkcji z perspektywy użytkownika w formie: jako \dots, chcę \dots, aby \dots. \\
+	\hline
+	\textbf{Kryteria akceptacji} & Warunki, które musi spełniać funkcja, aby uznać historyjkę za zrealizowaną. \\
+	\hline
+	\textbf{Gherkin} & Format zapisu kryteriów akceptacji w postaci scenariuszy Given (stan początkowy), When (akcja), Then (oczekiwany wynik). \\
+	\hline
+	\textbf{SWOT} & Analiza mocnych i słabych stron projektu oraz szans i zagrożeń z jego otoczenia. \\
+	\hline
+	\textbf{RACI} & Macierz przypisująca zadaniom role: wykonawca (R), odpowiedzialny (A), konsultowany (C), informowany (I). \\
+	\hline
 \end{tabularx}
 
 \pagebreak
@@ -219,13 +244,15 @@ Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User S
 \begin{quote}
 \textbf{Kryteria akceptacji (Gherkin):}
 
+\textbf{Scenariusz: dodanie oczka} \\
 \textbf{Given:} wzór zawiera co najmniej jeden element, a w palecie wybrany jest słupek \\
 \textbf{When:} użytkownik klika symbol na schemacie \\
 \textbf{Then:} do wzoru zostaje dodany słupek wbity w kliknięty element, a na schemacie pojawia się nowy symbol.
 
 \textbf{Scenariusz: niedozwolone wbicie} \\
-\textbf{When:} wybrany jest typ elementu, którego nie można wbić we wskazane miejsce \\
-\textbf{Then:} wzór pozostaje bez zmian i wyświetla się komunikat z przyczyną \\
+\textbf{Given:} wzór zawiera co najmniej jeden element, a w palecie wybrany jest typ oczka \\
+\textbf{When:} użytkownik klika element, w który oczka tego typu nie można wbić (zgodnie z regułami modelu) \\
+\textbf{Then:} wzór pozostaje bez zmian i wyświetla się komunikat z przyczyną
 \end{quote}
 
 \subsection*{\textbf{US-02: Usuwanie i edycja oczek}}
@@ -277,6 +304,7 @@ Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User S
 \begin{quote}
 \textbf{Kryteria akceptacji (Gherkin):}
 
+\textbf{Scenariusz: rozpoczęcie nowej warstwy} \\
 \textbf{Given:} bieżąca warstwa ma numer \textit{n} i zawiera co najmniej jeden element \\
 \textbf{When:} użytkownik wybiera opcję "nowa warstwa" \\
 \textbf{Then:} numer bieżącej warstwy wynosi \textit{n+1} i dodawane elementy mają przypisany numer warstwy \textit{n+1}.
@@ -313,7 +341,7 @@ Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User S
 
 \textbf{Scenariusz: przybliżanie i oddalanie} \\
 \textbf{Given:} schemat jest wyświetlony \\
-\textbf{When:} użytkownik obraca kółkiem myszy albo klika "+" lub "-" \\
+\textbf{When:} użytkownik obraca kółkiem myszy albo klika "\text{+}" lub "\text{-}" \\
 \textbf{Then:} widok przybliża się lub oddala względem pozycji kursora albo środka widoku i aktualna skala jest widoczna w interfejsie
 
 \textbf{Scenariusz: przesuwanie widoku} \\
@@ -331,6 +359,7 @@ Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User S
 \begin{quote}
 \textbf{Kryteria akceptacji (Gherkin):}
 
+\textbf{Scenariusz: przeliczenie układu po zmianie} \\
 \textbf{Given:} wzór jest wyświetlony na schemacie \\
 \textbf{When:} użytkownik modyfikuje wzór \\
 \textbf{Then:} układ symboli zostaje przeliczony i wyświetlają się one w zaktualizowanych pozycjach
@@ -355,6 +384,7 @@ Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User S
 \begin{quote}
 \textbf{Kryteria akceptacji (Gherkin):}
 
+\textbf{Scenariusz: zapis i ponowne wczytanie} \\
 \textbf{Given:} użytkownik utworzył wzór \\
 \textbf{When:} zapisuje projekt do pliku, a następnie go wczytuje \\
 \textbf{Then:} wzór, pozycja nici i numer bieżącego okrążenia pozostają takie same jak przed zapisem
@@ -373,12 +403,13 @@ Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User S
 \subsection*{\textbf{US-09: Eksport do pliku graficznego}}
 
 \noindent\textbf{Jako:} Osoba projektująca wzór,\par
-\noindent\textbf{Chcę:} wyeksportować schemat do pliku SVG, PDF lub PNG,\par
+\noindent\textbf{Chcę:} wyeksportować schemat do pliku SVG, PDF, PNG lub JPEG,\par
 \noindent\textbf{Aby:} go wydrukować lub opublikować.\par
 
 \begin{quote}
 \textbf{Kryteria akceptacji (Gherkin):}
 
+\textbf{Scenariusz: eksport schematu}
 \textbf{Given:} wzór zawiera co najmniej jedno oczko \\
 \textbf{When:} użytkownik wybiera eksport do wybranego formatu \\
 \textbf{Then:} w razie potrzeby wzór jest konwertowany do wybranego formatu, zostaje pobrany plik z całym schematem, niezależnie od bieżącego przybliżenia widoku.
