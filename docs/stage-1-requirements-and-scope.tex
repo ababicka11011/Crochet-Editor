@@ -129,7 +129,9 @@ Rozwiązanie opiera się na rozdzieleniu logicznej struktury wzoru od jego wizua
   \hline
   \textbf{Magiczne kółko (mr)} & Technika rozpoczęcia robótki okrężnej z zaciąganą pętlą. \\
   \hline
-  \textbf{Okrążenie / rząd (warstwa)} & Kolejna warstwa oczek wykonywana po okręgu lub w linii. \\
+  \textbf{Okrążenie / rząd} & Grupa oczek tworzonych sukcesywnie, wykonywana po okręgu lub w linii. \\
+  \hline
+  \textbf{Warstwa} & Reprezentacja okrążenia lub rzędu w modelu aplikacji. Model nie rozróżnia tych dwóch technik; różnią się one jedynie sposobem przejścia do kolejnej warstwy. \\
   \hline
   \textbf{Dodawanie / łączenie (increase / decrease)} & Zwiększanie lub zmniejszanie liczby oczek w warstwie. \\
   \hline
@@ -244,8 +246,6 @@ Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User S
 	\label{fig:use_cases}
 \end{figure}
 
-
-
 \subsection*{\textbf{US-01: Rozpoczęcie nowego wzoru}}
 
 \noindent\textbf{Jako:} Osoba projektująca wzór,\par
@@ -318,12 +318,12 @@ Wymagania funkcjonalne zostały zebrane w formie historyjek użytkownika (User S
 \textbf{Scenariusz: dodawanie oczek w jedno miejsce} \\
 \textbf{Given:} w palecie wybrany jest typ oczka pozwalający na wbicie \\
 \textbf{When:} użytkownik klika to samo oczko kilka razy z rzędu \\
-\textbf{Then:} każde kliknięcie dodaje nowy słupek wbity w to samo oczko i symbole rozkładają się wachlarzowo nad oczkiem bazowym
+\textbf{Then:} każde kliknięcie dodaje nowe oczko wybranego typu wbity w to samo oczko i symbole rozkładają się wachlarzowo nad oczkiem bazowym
 
 \textbf{Scenariusz: łączenie kilku oczek} \\
 \textbf{Given:} w palecie wybrany jest typ oczka pozwalający na wbicie, a tryb łączenia jest włączony \\
 \textbf{When:} użytkownik zaznacza kolejno dwa lub więcej sąsiednich oczek i zatwierdza wybór \\
-\textbf{Then:} zostaje dodany jeden półsłupek wbity we wszystkie zaznaczone oczka, a jego symbol odzwierciedla łączenie
+\textbf{Then:} zostaje dodany jedno oczko wybranego typu wbite we wszystkie zaznaczone oczka, a jego symbol odzwierciedla łączenie
 \end{quote}
 
 \subsection*{\textbf{US-05: Zmiana okrążenia/rzędu}}

@@ -1,11 +1,6 @@
-// import './App.css'
 import { useMemo } from 'react'
-import styles from './assets/css/App.module.css';
-// import heroImg from './assets/images/hero.png'
-// import reactLogo from './assets/images/react.svg'
-// import viteLogo from './assets/images/vite.svg'
-import type { Pattern } from './types/Stitch';
-// import type { Result } from './types/Result';
+import styles from './styles/App.module.css';
+import type { Pattern } from './contracts/Pattern';
 import { addStitch, increaseRound, startNewPattern } from './utils/pattern-operations'
 
 function App() {
@@ -21,16 +16,14 @@ function App() {
         <div className={styles['App-body']}>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 841.9 595.3">
             <g fill="#61DAFB">
-              {Object.values(pattern.stitches).map((stitch, index) => {
+              {Object.entries(pattern.layout.placements).map(([id, placement]) => (
                 // Render each stitch as a circle for now with its type displayed in the center
-                return (
-                  <g key={index}>
-                    <circle cx={stitch.x} cy={stitch.y} r="5" fill="yellow" />
-                    <text x={stitch.x} y={stitch.y} textAnchor="middle" dominantBaseline="central"
-                      fontSize={6} fill="black">{stitch.type}</text>
-                  </g>
-                );
-              })}
+                <g key={id}>
+                  <circle cx={placement.x} cy={placement.y} r="5" fill="yellow" />
+                  <text x={placement.x} y={placement.y} textAnchor="middle" dominantBaseline="central"
+                    fontSize={6} fill="black">{pattern.stitches[id].type}</text>
+                </g>
+              ))}
             </g>
           </svg>
         </div>

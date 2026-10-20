@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { Pattern } from '../types/Stitch';
-import type { Result } from '../types/Result';
+import type { Pattern } from '../contracts/Pattern';
+import type { Result } from '../model/Result';
 import {
   addStitch,
   removeLastStitch,
