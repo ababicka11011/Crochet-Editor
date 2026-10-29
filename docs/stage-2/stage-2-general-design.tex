@@ -1,0 +1,448 @@
+\documentclass[a4paper,11pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\hypersetup{hidelinks}
+\usepackage[polish]{babel}
+\usepackage[utf8]{inputenc}
+
+\usepackage{amsmath, amsfonts, amsthm, latexsym}
+\usepackage[final]{pdfpages}
+
+\usepackage[inner=20mm, outer=20mm, bindingoffset=0mm, top=25mm, bottom=25mm]{geometry}
+\linespread{1.2}
+\allowdisplaybreaks
+\usepackage{indentfirst}
+\setlength{\parindent}{5mm}
+
+\usepackage{tabularx}
+\usepackage{xltabular}
+\raggedbottom
+
+\usepackage{svg}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows,positioning,fit,calc,decorations.pathreplacing,backgrounds}
+
+% ----------------------------Do wypełnienia ----------------------
+\renewcommand{\title}{Edytor schematów szydełkowych z automatycznym rozmieszczaniem symboli}
+\newcommand{\stage}{Etap 2: Projekt architektury i projekt szczegółowy systemu}
+\newcommand{\supervisor}{dr inż. Paweł Kotowski}
+
+\newcommand{\authori}{Anna Babicka}
+\newcommand{\authorii}{Wiktor Murawski}
+
+
+\begin{document}
+
+\thispagestyle{empty}
+
+\begin{center}
+
+\includegraphics[width=\textwidth]{img/politechnika} 
+\vspace{100pt} 
+
+{\huge \title}
+
+\vspace{50pt}
+{\Large \stage}
+
+\vspace{60pt}
+
+Autorzy: \\
+\vspace{5pt}
+{\Large \authori, \authorii}
+
+\vspace{50pt}
+
+Promotor: \\
+\vspace{5pt}
+{\Large \supervisor}
+
+\vfill
+\today \\
+\vspace{20pt}
+
+\end{center}
+
+\pagebreak
+
+\tableofcontents
+
+\pagebreak
+
+\section*{Historia zmian dokumentu}
+
+\begin{tabularx}{0.95\textwidth}{|c|c|c|X|}
+  \hline
+  Wersja & Data & Autor & Opis zmian \\
+  \hline
+  \textbf{1.0} & 29.10.2026 & Wiktor Murawski & \textit{Pierwsza wersja dokumentu -- szkielet architektury, wybór technologii, opis modułów} \\
+  \hline
+\end{tabularx}
+
+\pagebreak
+
+\section{Architektura systemu}
+
+\subsection{Przegląd logiczny}
+
+Diagram przedstawia ogólną, logiczną architekturę systemu: główne moduły aplikacji i zależności między nimi, bez odwołań do konkretnych technologii. Strzałki wskazują kierunek wywołań między modułami; moduł wywoływany zwraca wynik do modułu wywołującego. Linia przerywana oznacza dostęp tylko do odczytu.
+
+System składa się z trzech głównych części.
+
+\textbf{Moduł edytora} odpowiada za interakcję z użytkownikiem. Warstwa UI umożliwia edycję i wyświetla schemat, a kontroler koordynuje przepływ informacji między interfejsem a pozostałymi modułami. Kontroler przechowuje także bieżący stan aplikacji i historię operacji, dzięki czemu warstwa UI jest odizolowana od logiki dziedzinowej.
+
+\textbf{Model wzoru} przechowuje formalną reprezentację wzoru w postaci grafu oczek wraz z operacjami jego modyfikacji i regułami zapewniającymi, że wzór jest możliwy do wykonania. Stanowi jedyne źródło danych o strukturze wzoru. Zmiany wprowadza wyłącznie kontroler, a moduł algorytmiczny jedynie odczytuje strukturę wzoru.
+
+\textbf{Moduł algorytmiczny} na podstawie struktury wzoru wyznacza układ symboli na schemacie, w tym wstępne położenie nowo dodanych elementów. Komunikuje się z kontrolerem przez wspólny interfejs, co pozwala rozwijać edytor i algorytm niezależnie. W razie potrzeby korzysta z zewnętrznych bibliotek układu grafów. Komunikację z nimi obsługuje adapter, który przygotowuje dane w wymaganym formacie i przekształca wyniki. Dzięki temu zmiana wykorzystywanej biblioteki nie wpływa na pozostałe elementy systemu.
+
+Taki podział oddziela strukturę wzoru od jego reprezentacji graficznej: model opisuje, \emph{co} zostało zaprojektowane, moduł algorytmiczny określa, \emph{jak} przedstawić to na schemacie, a edytor pośredniczy między użytkownikiem a tymi dwoma modułami.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  node distance=0.95cm and 1.5cm,
+  box/.style={draw, rounded corners, align=center, minimum height=1.15cm, minimum width=3.0cm, font=\small, inner sep=4pt},
+  arrow/.style={->, thick},
+  readarrow/.style={->, thick, dashed}
+]
+  % Editor
+  \node[box] (ui) {UI\\[1pt]\footnotesize edycja i wizualizacja};
+  \node[box, below=of ui] (ctrl) {Kontroler\\[1pt]\footnotesize koordynacja, stan, historia};
+  
+  % Model
+  \node[box, right=2.7cm of ctrl] (model) {Model wzoru\\[1pt]\footnotesize graf oczek, operacje,\\[-1pt]\footnotesize walidacja};
+  
+  % Algorithmic
+  \node[box, below=1.6cm of model] (algo) {Algorytmy rozmieszczania\\[1pt]\footnotesize w tym wstępne położenie};
+  \node[box, below=of algo] (adapter) {Adapter bibliotek\\[1pt]\footnotesize przygotowanie i konwersja};
+  
+  % External
+  \node[box, right=1.9cm of adapter, fill=black!6] (lib) {Zewnętrzne biblioteki\\układu grafów};
+  
+  % Background groups
+  \begin{scope}[on background layer]
+    \node[draw, rounded corners, inner sep=7pt, fit=(ui)(ctrl),
+          label={[font=\bfseries\footnotesize]above:Moduł edytora}] {};
+    \node[draw, rounded corners, inner sep=7pt, fit=(algo)(adapter),
+          label={[font=\bfseries\footnotesize]below:Moduł algorytmiczny}] {};
+  \end{scope}
+  
+  % Arrows
+  \draw[arrow] (ui) -- node[font=\scriptsize]{akcje użytkownika} (ctrl);
+  \draw[arrow] (ctrl) -- node[above, font=\scriptsize]{operacje na wzorze} (model);
+  \draw[arrow] (ctrl) |- node[pos=0.6, right, font=\scriptsize, align=left]{obliczenie układu\\(wspólny interfejs)} (algo);
+  \draw[readarrow] (algo) -- node[right, font=\scriptsize]{odczyt wzoru} (model);
+  \draw[arrow] (algo) -- (adapter);
+  \draw[arrow] (adapter) -- node[above, font=\scriptsize]{API} (lib);
+\end{tikzpicture}
+\caption{Logiczna architektura systemu -- główne moduły i zależności}
+\label{fig:architecture}
+\end{figure}
+
+\subsection{Odpowiedzialności modułów}
+
+\begin{tabularx}{0.95\textwidth}{|p{3.4cm}|X|}
+  \hline
+  \textbf{Moduł} & \textbf{Główne odpowiedzialności} \\
+  \hline
+  UI & Renderowanie symboli SVG, obsługa gestów (klik, drag, zoom, pan), paleta symboli, panele właściwości, komunikaty błędów, wskaźniki postępu layoutu. \\
+  \hline
+  Kontroler & Koordynacja przepływu; przechowywanie bieżącego stanu aplikacji i historii operacji (undo/redo); wywoływanie operacji na modelu oraz żądań obliczenia układu; izolacja UI od logiki dziedzinowej. \\
+  \hline
+  Model wzoru & Jedne źródło prawdy o strukturze wzoru (graf oczek); operacje atomowe (dodanie/usunięcie/zmiana typu oczka, nowa warstwa); reguły walidacji poprawności wzoru; brak zależności od UI i algorytmu. \\
+  \hline
+  Algorytmy rozmieszczania & Wyznaczanie pozycji, orientacji i skal symboli; wstępne położenie nowo dodanych elementów; metryki jakości układu (nakładanie, proporcje). \\
+  \hline
+  Adapter bibliotek & Przygotowanie danych wejściowych dla zewnętrznej biblioteki układu grafów; konwersja wyników z powrotem do wspólnego formatu LayoutResult; izolacja reszty systemu od konkretnej implementacji. \\
+  \hline
+\end{tabularx}
+
+\pagebreak
+
+\section{Projekt modułów}
+
+\subsection{Warstwy i zależności}
+
+Architektura jest warstwowa z wyraźnym kierunkiem zależności (warstwy wyższe zależą od niższych, nigdy odwrotnie):
+
+\begin{enumerate}
+  \item \textbf{Presentation (UI)} -- komponenty React, hooki; zależy wyłącznie od Kontrolera.
+  \item \textbf{Application (Kontroler)} -- stan, historia, koordynacja; zależy od Modelu wzoru i interfejsu Algorytmów rozmieszczania.
+  \item \textbf{Domain (Model wzoru)} -- czysty TypeScript, bez Reacta i DOM; niezależny.
+  \item \textbf{Infrastructure} -- Web Worker, adapter bibliotek, localStorage, File API, canvas; implementuje interfejsy zdefiniowane wyżej.
+\end{enumerate}
+
+Kluczowe interfejsy (szkic TypeScript):
+
+\begin{verbatim}
+// Domain
+interface Stitch {
+  id: string;
+  type: StitchType;          // sc | hdc | dc | tr | ch | slst | mr ...
+  parentIds: string[];       // oczka, w które wbite
+  round: number;
+  // ... dodatkowe atrybuty (np. yarn-over count)
+}
+
+interface PatternGraph {
+  stitches: Map<string, Stitch>;
+  yarnPosition: string | null;   // id ostatniego oczka
+  currentRound: number;
+}
+
+interface DomainAPI {
+  createNewPattern(start: StartElement): PatternGraph;
+  addStitch(graph: PatternGraph, type: StitchType, parentId: string): PatternGraph;
+  removeLast(graph: PatternGraph): PatternGraph;
+  // ... pozostałe operacje z US-01..US-05
+  validateInsertion(type: StitchType, target: Stitch): boolean;
+}
+
+// Layout
+interface LayoutNode {
+  id: string;
+  x: number; y: number;
+  rotation: number;          // radiany, baza w stronę rodzica
+  scaleX: number; scaleY: number;
+  width: number; height: number;  // po skalowaniu
+}
+
+interface LayoutResult {
+  nodes: LayoutNode[];
+  seed: number;
+  metrics: { overlapAreaRatio: number; aspectViolations: number };
+}
+
+interface LayoutService {
+  compute(graph: PatternGraph, options?: LayoutOptions): Promise<LayoutResult>;
+}
+\end{verbatim}
+
+\subsection{Moduły szczegółowe (katalogi)}
+
+\begin{itemize}
+  \item \textbf{model/} -- implementacja PatternGraph, operacje immutable, walidatory reguł szydełkowych.
+  \item \textbf{layout/} -- algorytmy rozmieszczania + adapter do zewnętrznej biblioteki + worker entrypoint.
+  \item \textbf{controller/} (lub store/) -- stan aplikacji, historia undo/redo, selektory, koordynacja wywołań.
+  \item \textbf{ui/editor/} -- Canvas SVG, SymbolRenderer, InteractionLayer (hit-testing, selection).
+  \item \textbf{ui/panels/} -- Palette, Properties, Toolbar, LayerIndicator.
+  \item \textbf{persist/} -- JSON schema + serializers; AutosaveService; FileExporter (SVG/PNG/JPEG/PDF).
+  \item \textbf{symbols/} -- definicje ścieżek SVG i metadanych (preferowane aspect ratio, anchor points) dla każdego typu oczka.
+\end{itemize}
+
+Zależności zewnętrzne są izolowane w warstwie infrastructure (adapter + Web Worker), co ułatwia testowanie domeny i layoutu bez przeglądarki (NFR-M1) oraz wymianę biblioteki układu grafów bez zmian w reszcie systemu.
+
+\pagebreak
+
+\section{Komunikacja}
+
+Aplikacja jest w pełni client-side, więc nie występują protokoły sieciowe ani konfiguracja serwerów. Komunikacja wewnętrzna:
+
+\begin{itemize}
+  \item \textbf{UI $\leftrightarrow$ Kontroler} -- React hooks + subskrypcje; zmiany stanu wywołują re-render tylko zainteresowanych komponentów.
+  \item \textbf{Kontroler $\leftrightarrow$ Model wzoru} -- synchroniczne wywołania funkcji czystych (immutable updates). Każda operacja użytkownika tworzy nowy snapshot grafu i wpis w historii.
+  \item \textbf{Kontroler $\leftrightarrow$ Moduł algorytmiczny} -- asynchroniczne: po każdej zmianie grafu wysyłany jest komunikat \texttt{postMessage} do Web Workera z serializowanym grafem + seedem. Worker zwraca LayoutResult. W czasie obliczeń UI pozostaje responsywny (NFR-P3).
+  \item \textbf{Adapter $\leftrightarrow$ biblioteka zewnętrzna} -- wywołania API wybranej biblioteki (d3-force / WebCola lub innej); konwersja formatów po obu stronach.
+  \item \textbf{Persist} -- File System Access API (tam gdzie dostępne) lub klasyczne \texttt{<input type="file">} + download link; localStorage dla autosave co $\leq$ 30~s (NFR-R3).
+\end{itemize}
+
+Biblioteki komunikacyjne: natywne Web Worker API, structured clone algorithm (dla postMessage). Brak WebSocketów, HTTP clientów czy message brokerów.
+
+\pagebreak
+
+\section{Główne komponenty -- opisy i diagramy}
+
+\subsection{Model danych (Domain)}
+
+Wierzchołki grafu odpowiadają oczkom. Krawędzie skierowane reprezentują relację „wbite w”. Dodatkowo utrzymywana jest lista kolejności dodawania (dla undo i pozycji nici) oraz numer warstwy.
+
+\begin{center}
+\begin{tikzpicture}[
+  node distance=1.5cm,
+  class/.style={draw, rectangle, rounded corners, align=left, font=\ttfamily\small, minimum width=4.5cm},
+  inh/.style={->, thick}
+]
+  \node[class] (stitch) {
+    \textbf{Stitch}\\
+    + id: string\\
+    + type: StitchType\\
+    + parentIds: string[]\\
+    + round: number\\
+    + metadata: object
+  };
+  \node[class, below=of stitch] (graph) {
+    \textbf{PatternGraph}\\
+    + stitches: Map\\
+    + yarnPosition: string|null\\
+    + currentRound: number\\
+    + history: PatternGraph[]
+  };
+  \draw[inh] (graph) -- (stitch);
+\end{tikzpicture}
+\end{center}
+
+\subsection{Stany aplikacji (uproszczony diagram stanów)}
+
+\begin{center}
+\begin{tikzpicture}[
+  state/.style={draw, rounded corners, align=center, minimum width=2.2cm, minimum height=0.9cm, font=\small},
+  arrow/.style={->, thick}
+]
+  \node[state] (idle) {Idle\\(gotowy)};
+  \node[state, right=2.5cm of idle] (editing) {Edycja\\wzoru};
+  \node[state, below=1.3cm of editing] (layouting) {Przeliczanie\\layoutu};
+  \node[state, left=2.5cm of layouting] (exporting) {Eksport};
+  
+  \draw[arrow] (idle) -- node[above,font=\scriptsize]{add/remove/edit} (editing);
+  \draw[arrow] (editing) -- node[right,font=\scriptsize]{zmiana grafu} (layouting);
+  \draw[arrow] (layouting) -- node[below,font=\scriptsize]{LayoutResult} (idle);
+  \draw[arrow] (idle) -- node[left,font=\scriptsize]{eksport} (exporting);
+  \draw[arrow] (exporting) -- (idle);
+\end{tikzpicture}
+\end{center}
+
+\subsection{Aktywność: dodanie oczka (US-02)}
+
+\begin{enumerate}
+  \item Użytkownik wybiera typ z palety $\to$ stan „pending stitch type”.
+  \item Kliknięcie symbolu na schemacie $\to$ walidacja reguły wbicia (Model wzoru).
+  \item Jeśli OK: nowy Stitch + aktualizacja grafu + wpis do historii (Kontroler).
+  \item Wywołanie LayoutService.compute() w Workerze (przez Adapter).
+  \item Po otrzymaniu wyniku: aktualizacja pozycji w Kontrolerze $\to$ re-render SVG.
+  \item Jeśli błąd walidacji: komunikat, brak zmiany modelu.
+\end{enumerate}
+
+\subsection{Zdarzenia kluczowe}
+
+\begin{itemize}
+  \item \texttt{pattern:changed} -- po każdej mutacji grafu.
+  \item \texttt{layout:started / layout:finished / layout:failed}.
+  \item \texttt{selection:changed}, \texttt{view:transformed} (zoom/pan).
+  \item \texttt{history:undo / history:redo}.
+  \item \texttt{persist:autosaved}, \texttt{export:requested}.
+\end{itemize}
+
+\pagebreak
+
+\section{Wizja interfejsu użytkownika}
+
+Interfejs jest jednookienkowy, zorientowany na maksymalną przestrzeń roboczą dla schematu.
+
+\subsection{Główne obszary (wireframe tekstowy)}
+
+\begin{verbatim}
++------------------------------------------------------------------+
+|  [Nowy] [Otwórz] [Zapisz] [Eksport]   Undo Redo   Zoom 100%      |  <- Toolbar
++----------+-------------------------------------------+-----------+
+|          |                                           |           |
+|  Paleta  |                                           |  Właści-  |
+|  symboli |              SVG Canvas                   |  wości    |
+|  (sc,    |         (schemat + hit areas)             |  zaznaczo-|
+|   hdc,   |                                           |  nego     |
+|   dc...) |                                           |  oczka    |
+|          |                                           |           |
+|  Warstwa |                                           |  Numer    |
+|  bieżąca |                                           |  okrążenia|
+|          |                                           |           |
++----------+-------------------------------------------+-----------+
+|  Status: gotowy / przeliczanie... / błąd walidacji               |  <- Status bar
++------------------------------------------------------------------+
+\end{verbatim}
+
+\subsection{Kluczowe interakcje}
+
+\begin{itemize}
+  \item Kliknięcie symbolu w palecie + kliknięcie na schemacie = dodanie oczka (US-02).
+  \item Kółko myszy / przyciski +/– = zoom względem kursora (US-07).
+  \item Przeciąganie tła = pan.
+  \item Ctrl+Z / Ctrl+Y = undo/redo (US-06).
+  \item Podwójne kliknięcie lub panel właściwości = zmiana typu / parametrów.
+  \item Wskaźnik postępu / spinner na canvasie podczas długiego layoutu (>200\,ms).
+\end{itemize}
+
+Wizualizacje (makiety) zostaną doprecyzowane w kolejnej iteracji dokumentu lub w osobnym załączniku (Figma / szkice). Na obecnym etapie wystarcza opis obszarów i mapowanie na historyjki użytkownika.
+
+\pagebreak
+
+\section{Zewnętrzne interfejsy}
+
+\subsection{Format pliku projektu (JSON)}
+
+Własny, wersjonowany format JSON (schema w osobnym pliku JSON Schema):
+
+\begin{verbatim}
+{
+  "version": "1.0",
+  "meta": { "title": "...", "created": "...", "seed": 12345 },
+  "pattern": {
+    "stitches": [ { "id": "...", "type": "dc", "parents": ["..."], "round": 2 }, ... ],
+    "yarnPosition": "...",
+    "currentRound": 3
+  },
+  "view": { "zoom": 1.0, "panX": 0, "panY": 0 }   // opcjonalnie
+}
+\end{verbatim}
+
+Zachowanie 100\% danych strukturalnych (NFR-R1). Niepoprawny plik $\to$ komunikat błędu, brak awarii (NFR-R2).
+
+\subsection{Eksport graficzny}
+
+\begin{itemize}
+  \item \textbf{SVG} -- natywny, wektorowy, zachowuje symbole jako \texttt{<g>} / \texttt{<path>}.
+  \item \textbf{PNG / JPEG} -- rasteryzacja SVG przez OffscreenCanvas lub tymczasowy \texttt{<canvas>}.
+  \item \textbf{PDF} -- jsPDF + svg2pdf.js lub podobna biblioteka; jedna strona A4 / Letter z dopasowanym schematem.
+\end{itemize}
+
+Brak integracji z zewnętrznymi usługami (brak OAuth, API chmurowych itp.). Standardy: SVG 1.1 / 2, JSON (RFC 8259), File API / File System Access API.
+
+\pagebreak
+
+\section{Stos technologiczny}
+
+Poniższa tabela przedstawia technologie przyjęte w projekcie wraz z rozważanymi alternatywami i uzasadnieniem wyboru. Aplikacja działa w całości w przeglądarce, dlatego narzędzia takie jak Node.js czy Vite są wykorzystywane wyłącznie na etapie tworzenia, testowania i budowania aplikacji.
+
+\begin{xltabular}{0.95\textwidth}{|p{2.5cm}|p{2.3cm}|p{3.8cm}|X|}
+  \hline
+  \textbf{Moduł / Komponent} & \textbf{Wybrana technologia} & \textbf{Rozważane alternatywy} & \textbf{Uzasadnienie wyboru} \\
+  \hline
+  \endfirsthead
+  \hline
+  \textbf{Moduł / Komponent} & \textbf{Wybrana technologia} & \textbf{Rozważane alternatywy} & \textbf{Uzasadnienie wyboru} \\
+  \hline
+  \endhead
+  \textbf{Platforma} & aplikacja webowa & Aplikacja desktopowa: WPF/C\#, Avalonia/C\#, Electron & Dostęp bez instalacji, jedna implementacja dla różnych systemów operacyjnych. \\
+  \hline
+  \textbf{Framework} & React & Vue & Dojrzały ekosystem, model komponentowy, dobra współpraca z niemutowalnym stanem. \\
+  \hline
+  \textbf{Język} & TypeScript & JavaScript & Statyczne typowanie złożonego modelu danych, bezpieczniejsza refaktoryzacja, wspólne kontrakty między modułami. \\
+  \hline
+  \textbf{Renderowanie schematu} & SVG & Canvas (Konva / react-konva), czysty HTML Canvas & Grafika wektorowa, każdy symbol jako osobny element, naturalny format eksportu; Canvas wymagałby osobnego eksportu do SVG i własnej obsługi zaznaczania. \\
+  \hline
+  \textbf{Narzędzie budowania} & Vite & Webpack & Szybki serwer deweloperski, gotowa obsługa TypeScriptu i Reacta. \\
+  \hline
+  \textbf{Środowisko uruchomieniowe (dev)} & Node.js + npm & -- & npm dostępny razem z Node.js bez dodatkowej instalacji; wersje przypięte w \texttt{.nvmrc} i lockfile'u zapewniają powtarzalność środowiska. \\
+  \hline
+  \textbf{Repozytorium i CI/CD} & GitHub + GitHub Actions & GitLab CI & Code review przez pull requesty, automatyczne testy przy każdej zmianie, wcześniejsze doświadczenie z GitHub Actions. \\
+  \hline
+  \textbf{Zarządzanie stanem} & Zustand (lub Jotai) & Redux Toolkit, React Context & Lekki store, łatwe middleware undo/redo, mniejszy boilerplate. \\
+  \hline
+  \textbf{Silnik layoutu} & d3-force / WebCola & Własna implementacja, cytoscape.js & Dojrzałe, dobrze udokumentowane implementacje force-directed + constraint-based; możliwość uruchomienia w Web Workerze; izolacja przez adapter. \\
+  \hline
+  \textbf{Testy} & Vitest + Testing Library & Jest & Natywna integracja z Vite, szybkie uruchamianie, dobre wsparcie TypeScript. \\
+  \hline
+  \textbf{Eksport PDF} & jsPDF + svg2pdf & pdfkit, puppeteer & Działa w pełni po stronie klienta, bez potrzeby serwera. \\
+  \hline
+\end{xltabular}
+
+\subsection{Uzasadnienie wyboru podejścia do layoutu}
+
+Na podstawie literatury (m.in. Greer \& Mould 2025 -- \textit{Modeling Crochet Patterns with a Force-directed Graph Layout}) oraz analizy istniejących narzędzi (CrochetPARADE, Stitch Fiddle) wybrano podejście force-directed / constraint-based. Nie tworzymy nowego algorytmu od zera; wartość inżynierska leży w integracji, dostosowaniu sił (orientacja symboli względem rodzica, preferowane proporcje H/W, minimalizacja nakładania) oraz zapewnieniu interaktywności (Web Worker, determinizm przy seedzie). Adapter bibliotek pozwala na ewentualną wymianę implementacji bez wpływu na resztę systemu.
+
+\subsection{Środowisko deweloperskie}
+
+Node.js + npm/pnpm, ESLint + Prettier, Git. Testy w CI (GitHub Actions). Brak zależności od konkretnego systemu operacyjnego -- rozwój możliwy na Windows / macOS / Linux. Wersje narzędzi są przypięte (\texttt{.nvmrc}, \texttt{package-lock.json} / \texttt{pnpm-lock.yaml}).
+
+
+\end{document}
