@@ -1,47 +1,60 @@
-# Document Stage 2: System Architecture and Technical Design (Architecture & Technical Design)
+# Etap 2: Architektura systemu and projekt techniczny (System Architecture & Technical Design)
 
 **Engineering / Master's Project – Faculty of MIS PW**
 
 ---
 
-## 1. System Architecture (C4 Model – Container Diagram)
+## 1. Architektura systemu
 
-The diagram below illustrates the logical division of the system into containers, communication protocols, and data stores:
+Diagram przedstawia ogólną, logiczną architekturę systemu: główne moduły aplikacji i zależności między nimi, bez odwołań do konkretnych technologii. Strzałki wskazują kierunek wywołań między modułami; moduł wywoływany zwraca wynik do modułu wywołującego. Linia przerywana oznacza dostęp tylko do odczytu.
+
+System składa się z trzech głównych części. Moduł edytora odpowiada za interakcję z użytkownikiem. Warstwa UI umożliwia edycję i wyświetla schemat, a kontroler koordynuje przepływ informacji między interfejsem a pozostałymi modułami. Kontroler przechowuje także bieżący stan aplikacji i historię operacji, dzięki czemu warstwa UI jest odizolowana od logiki dziedzinowej.
+
+Model wzoru przechowuje formalną reprezentację wzoru w postaci grafu oczek wraz z operacjami jego modyfikacji i regułami zapewniającymi, że wzór jest możliwy do wykonania. Stanowi jedyne źródło danych o strukturze wzoru. Zmiany wprowadza wyłącznie kontroler, a moduł algorytmiczny jedynie odczytuje strukturę wzoru.
+
+Moduł algorytmiczny na podstawie struktury wzoru wyznacza układ symboli na schemacie, w tym wstępne położenie nowo dodanych elementów. Komunikuje się z kontrolerem przez wspólny interfejs, co pozwala rozwijać edytor i algorytm niezależnie. W razie potrzeby korzysta z zewnętrznych bibliotek układu grafów. Komunikację z nimi obsługuje adapter, który przygotowuje dane w wymaganym formacie i przekształca wyniki. Dzięki temu zmiana wykorzystywanej biblioteki nie wpływa na pozostałe elementy systemu.
+
+Taki podział oddziela strukturę wzoru od jego reprezentacji graficznej: model opisuje, co zostało zaprojektowane, moduł algorytmiczny określa, jak przedstawić to na schemacie, a edytor pośredniczy między użytkownikiem a tymi dwoma modułami.
 
 ```mermaid
-flowchart TD
-    User["User / Analyst (Web Browser)"]
-    Sensors["IoT Sensors / Data Sources"]
-
-    subgraph System ["DataStream System (Docker Compose Environment)"]
-        Frontend["Frontend SPA (React + TypeScript)\nPort: 3000"]
-        API["Backend API & Ingestion (FastAPI / Python)\nPort: 8000"]
-        Worker["ML Analytical Engine (Python Worker)\nAnomaly Detection"]
-        DB[(Time Series Database\nPostgreSQL + TimescaleDB\nPort: 5432)]
-        Redis[(Task Queue & Message Broker\nRedis Cache\nPort: 6379)]
+flowchart TB
+    subgraph ED["Moduł edytora"]
+        UI["UI<br/>(edycja i wizualizacja schematu)"]
+        C["Kontroler<br/>(koordynacja, stan, historia operacji)"]
     end
 
-    User -->|HTTPS / WSS| Frontend
-    Frontend -->|REST API / WebSocket| API
-    Sensors -->|HTTP POST / Telemetry| API
-    API -->|Store measurement points| DB
-    API -->|Publish measurement stream| Redis
-    Worker -->|Subscribe to stream| Redis
-    Worker -->|Store detected anomalies| DB
-    API -->|Read historical data| DB
+    M["Model wzoru<br/>(graf oczek, operacje, walidacja)"]
+
+    subgraph ALG["Moduł algorytmiczny"]
+        A["Algorytmy rozmieszczania<br/>(w tym wstępne położenie nowych symboli)"]
+        AD["Adapter bibliotek<br/>(przygotowanie i konwersja danych)"]
+    end
+
+    LIB[["Zewnętrzne biblioteki układu grafów"]]
+
+    UI -- "akcje użytkownika" --> C
+    C -- "operacje na wzorze" --> M
+    C -- "obliczenie układu<br/>(wspólny interfejs)" --> A
+    A -. "odczyt wzoru" .-> M
+    A -- "dane do obliczeń" --> AD
+    AD -- "API biblioteki" --> LIB
 ```
 
 ---
 
-## 2. Justification of Technology Stack Choice
+## 2. Stos technologiczny
 
-| Module / Component    | Selected Technology                      | Considered Alternatives   | Justification and Trade-offs                                                                                                                            |
+Poniższa tabela przedstawia technologie przyjęte w projekcie wraz z rozważanymi alternatywami i uzasadnieniem wyboru. Aplikacja działa w całości w przeglądarce, dlatego narzędzia takie jak Node.js czy Vite są wykorzystywane wyłącznie na etapie tworzenia, testowania i budowania aplikacji.
+
+| Moduł / Komponent | Wybrana technologia | Rozważane alternatywy | Uzasadnienie wyboru                                                                                                                            |
 | :-------------------- | :--------------------------------------- | :------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Backend API** | **FastAPI (Python 3.11)**          | Django, Flask, Express.js | High asynchronous performance (ASGI), automatic OpenAPI/Swagger schema generation, native integration with ML libraries (NumPy, PyTorch, scikit-learn). |
-| **Database**    | **PostgreSQL + TimescaleDB**       | InfluxDB, MongoDB         | Combines efficient time partitioning (hypertables) with full relational and transactional SQL capabilities for users and metadata.                      |
-| **Task Broker** | **Redis (Pub/Sub + Streams)**      | Apache Kafka, RabbitMQ    | Low memory overhead ($< 50$ MB RAM vs $> 1$ GB for Kafka), simplicity of configuration in Docker on lab machines.                                   |
-| **Frontend**    | **React + TailwindCSS + Chart.js** | Vue, Angular              | Rich ecosystem of libraries for interactive time series visualization, high modularity of components.                                                   |
-| **Deployment**  | **Docker & Docker Compose**        | Bare-metal, Minikube      | Ensures reproducibility of the environment in the MiNI PW lab regardless of the operating system (Linux/macOS/Windows).                                 |
+| **Platforma** | **aplikacja webowa** | Aplikacja desktopa: WPF/C#, Avalonia/C#, Electron | dostęp bez instalacji, jedna implementacja dla różnych systemów. |
+| **Framework** | **React** | Vue | Dojrzały ekosystem, model komponentowy, dobra współpraca z niemutowalnym stanem. |
+| **Język** | **TypeScript** | JavaScript | Statyczne typowanie złożonego modelu danych, bezpieczniejsza refaktoryzacja, wspólne kontrakty między modułami. |
+| **Renderowanie schematu** | **SVG**      | Canvas (Konva / react-konva), czysty HTML Canvas | Grafika wektorowa, każdy symbol jako osobny element, naturalny format eksportu; Canvas wymagałby osobnego eksportu do SVG i własnej obsługi zaznaczania. |
+| **Narzędzie budowania** | **Vite** | Webpack | Szybki serwer deweloperski, gotowa obsługa TypeScriptu i Reacta. |
+| **Środowisko uruchomieniowe**  | **Node.js + npm** | npm dostępny razem z Node.js bez dodatkowej instalacji i domyślnie wspierany przez narzędzia projektu oraz GitHub Actions; wersje przypięte w .nvmrc i lockfile’u zapewniają powtarzalność środowiska. |
+| **Repozytorium i CI/CD** | **GitHub, GitHub Actions** | GitLab CI | Code review przez pull requesty, automatyczne testy przy każdej zmianie, wcześniejsze doświadczenie z GitHub Actions. |
 
 ---
 
