@@ -22,11 +22,15 @@
 
 \usepackage{svg}
 \usepackage{tikz}
-\usetikzlibrary{shapes,arrows,positioning,fit,calc,decorations.pathreplacing,backgrounds}
+\usetikzlibrary{shapes,arrows,arrows.meta,positioning,fit,calc,decorations.pathreplacing,backgrounds}
+
+\usepackage{csquotes}
+\usepackage[backend=biber, style=numeric, sorting=none]{biblatex}
+\addbibresource{references.bib}
 
 % ----------------------------Do wypełnienia ----------------------
 \renewcommand{\title}{Edytor schematów szydełkowych z automatycznym rozmieszczaniem symboli}
-\newcommand{\stage}{Etap 2: Projekt architektury i projekt szczegółowy systemu}
+\newcommand{\stage}{Projekt architektury i projekt szczegółowy systemu}
 \newcommand{\supervisor}{dr inż. Paweł Kotowski}
 
 \newcommand{\authori}{Anna Babicka}
@@ -87,11 +91,11 @@ Promotor: \\
 
 \subsection{Przegląd logiczny}
 
-Diagram przedstawia ogólną, logiczną architekturę systemu: główne moduły aplikacji i zależności między nimi, bez odwołań do konkretnych technologii. Strzałki wskazują kierunek wywołań między modułami; moduł wywoływany zwraca wynik do modułu wywołującego. Linia przerywana oznacza dostęp tylko do odczytu.
+Rysunek~\ref{fig:architecture} przedstawia ogólną, logiczną architekturę systemu: główne moduły aplikacji i zależności między nimi, bez odwołań do konkretnych technologii. Strzałki wskazują kierunek wywołań między modułami; moduł wywoływany zwraca wynik do modułu wywołującego. Linia przerywana oznacza dostęp tylko do odczytu.
 
 System składa się z trzech głównych części.
 
-\textbf{Moduł edytora} odpowiada za interakcję z użytkownikiem. Warstwa UI umożliwia edycję i wyświetla schemat, a kontroler koordynuje przepływ informacji między interfejsem a pozostałymi modułami. Kontroler przechowuje także bieżący stan aplikacji i historię operacji, dzięki czemu warstwa UI jest odizolowana od logiki dziedzinowej.
+\textbf{Moduł edytora} odpowiada za interakcję z użytkownikiem. Warstwa UI umożliwia edycję i wyświetla schemat, a kontroler koordynuje przepływ informacji między interfejsem a pozostałymi modułami. Kontroler przechowuje także bieżący stan aplikacji i historię operacji (wzoru i układu symboli), dzięki czemu warstwa UI jest odizolowana od logiki dziedzinowej.
 
 \textbf{Model wzoru} przechowuje formalną reprezentację wzoru w postaci grafu oczek wraz z operacjami jego modyfikacji i regułami zapewniającymi, że wzór jest możliwy do wykonania. Stanowi jedyne źródło danych o strukturze wzoru. Zmiany wprowadza wyłącznie kontroler, a moduł algorytmiczny jedynie odczytuje strukturę wzoru.
 
@@ -134,8 +138,8 @@ Taki podział oddziela strukturę wzoru od jego reprezentacji graficznej: model 
   \draw[arrow] (ctrl) -- node[above, font=\scriptsize]{operacje na wzorze} (model);
   \draw[arrow] (ctrl) |- node[pos=0.6, right, font=\scriptsize, align=left]{obliczenie układu\\(wspólny interfejs)} (algo);
   \draw[readarrow] (algo) -- node[right, font=\scriptsize]{odczyt wzoru} (model);
-  \draw[arrow] (algo) -- (adapter);
-  \draw[arrow] (adapter) -- node[above, font=\scriptsize]{API} (lib);
+  \draw[arrow] (algo) -- node[right, font=\scriptsize]{dane do obliczeń} (adapter);
+  \draw[arrow] (adapter) -- node[above, font=\scriptsize]{API biblioteki} (lib);
 \end{tikzpicture}
 \caption{Logiczna architektura systemu -- główne moduły i zależności}
 \label{fig:architecture}
@@ -147,15 +151,15 @@ Taki podział oddziela strukturę wzoru od jego reprezentacji graficznej: model 
   \hline
   \textbf{Moduł} & \textbf{Główne odpowiedzialności} \\
   \hline
-  UI & Renderowanie symboli SVG, obsługa gestów (klik, drag, zoom, pan), paleta symboli, panele właściwości, komunikaty błędów, wskaźniki postępu layoutu. \\
+  UI & Renderowanie symboli schematu, obsługa gestów (kliknięcie, przeciąganie, przybliżanie, przesuwanie widoku niezależnie od układu), paleta symboli, panele właściwości, komunikaty błędów, wskaźniki postępu obliczeń layoutu. \\
   \hline
-  Kontroler & Koordynacja przepływu; przechowywanie bieżącego stanu aplikacji i historii operacji (undo/redo); wywoływanie operacji na modelu oraz żądań obliczenia układu; izolacja UI od logiki dziedzinowej. \\
+  Kontroler & Koordynacja przepływu; przechowywanie bieżącego stanu aplikacji i historii operacji (cofnij/ponów); wywoływanie operacji na modelu oraz żądań obliczenia układu; zapis i odczyt projektu (wzór i układ), eksport schematu do plików graficznych; izolacja UI od logiki dziedzinowej. \\
   \hline
-  Model wzoru & Jedne źródło prawdy o strukturze wzoru (graf oczek); operacje atomowe (dodanie/usunięcie/zmiana typu oczka, nowa warstwa); reguły walidacji poprawności wzoru; brak zależności od UI i algorytmu. \\
+  Model wzoru & Jedne źródło danych o strukturze wzoru (graf oczek); operacje atomowe (dodanie/usunięcie/zmiana typu oczka, nowa warstwa); reguły walidacji poprawności wzoru; brak zależności od UI i algorytmu. \\
   \hline
-  Algorytmy rozmieszczania & Wyznaczanie pozycji, orientacji i skal symboli; wstępne położenie nowo dodanych elementów; metryki jakości układu (nakładanie, proporcje). \\
+  Algorytmy rozmieszczania & Wyznaczanie pozycji, orientacji i skali symboli; wstępne położenie nowo dodanych elementów; metryki jakości układu (nakładanie, proporcje). \\
   \hline
-  Adapter bibliotek & Przygotowanie danych wejściowych dla zewnętrznej biblioteki układu grafów; konwersja wyników z powrotem do wspólnego formatu LayoutResult; izolacja reszty systemu od konkretnej implementacji. \\
+  Adapter bibliotek & Przygotowanie danych wejściowych dla zewnętrznej biblioteki układu grafów; konwersja wyników do wewnętrznego formatu modułu algorytmicznego; izolacja reszty systemu od konkretnej implementacji. \\
   \hline
 \end{tabularx}
 
@@ -168,11 +172,13 @@ Taki podział oddziela strukturę wzoru od jego reprezentacji graficznej: model 
 Architektura jest warstwowa z wyraźnym kierunkiem zależności (warstwy wyższe zależą od niższych, nigdy odwrotnie):
 
 \begin{enumerate}
-  \item \textbf{Presentation (UI)} -- komponenty React, hooki; zależy wyłącznie od Kontrolera.
-  \item \textbf{Application (Kontroler)} -- stan, historia, koordynacja; zależy od Modelu wzoru i interfejsu Algorytmów rozmieszczania.
-  \item \textbf{Domain (Model wzoru)} -- czysty TypeScript, bez Reacta i DOM; niezależny.
-  \item \textbf{Infrastructure} -- Web Worker, adapter bibliotek, localStorage, File API, canvas; implementuje interfejsy zdefiniowane wyżej.
+  \item \textbf{Prezentacja (UI)} -- komponenty React, hooki; zależy wyłącznie od kontrolera.
+  \item \textbf{Aplikacja (Kontroler)} -- stan, historia, koordynacja; zależy od modelu wzoru i kontraktu modułu algorytmicznego.
+  \item \textbf{Domena (Model wzoru)} -- model wzoru oraz algorytmy rozmieszczania; czysty TypeScript, bez Reacta i DOM; niezależny.
+  \item \textbf{Infrastruktura} -- Web Worker, adapter bibliotek, localStorage, File API; implementuje interfejsy zdefiniowane wyżej (odwrócenie zależności).
 \end{enumerate}
+
+Struktura modelu wzoru opiera się na grafowej reprezentacji wzorów szydełkowych zaproponowanej przez Seitz i in.~\cite{seitz2022digital, seitz2021language}; jej założenia i wprowadzone zmiany opisano w punkcie~\ref{sec:data-model}.
 
 Kluczowe interfejsy (szkic TypeScript):
 
@@ -180,138 +186,181 @@ Kluczowe interfejsy (szkic TypeScript):
 // Domain
 interface Stitch {
   id: string;
-  type: StitchType;          // sc | hdc | dc | tr | ch | slst | mr ...
-  parentIds: string[];       // oczka, w które wbite
-  round: number;
+  type: StitchType;           // sc | hdc | dc | tr | ch | slst | mr ...
+  layer: number;
   // ... dodatkowe atrybuty (np. yarn-over count)
 }
 
-interface PatternGraph {
-  stitches: Map<string, Stitch>;
-  yarnPosition: string | null;   // id ostatniego oczka
-  currentRound: number;
+interface Edge {              // kierunek: od nowszego do starszego węzła
+  kind: EdgeKind;             // 'previous' | 'insertion' | 'slip-stitch' | 'surrounding'
+  from: StitchId;             
+  to: StitchId;
+  insertion?: Insertion;      // tylko dla kind = 'insertion'; np. 'both-loops' | 'back-loop' ...
 }
 
+interface Pattern  {
+  stitches: Record<string, Stitch>;
+  edges: readonly Edge[];
+  cursor: StitchId | null;    // oczko, z którego wychodzi nić
+  currentLayer: number;
+  nextOrder: number;          // licznik do nadawania id i kolejności
+}
+
+type Result<T> = { ok: true; value: T } | { ok: false; error: string };
+
 interface DomainAPI {
-  createNewPattern(start: StartElement): PatternGraph;
-  addStitch(graph: PatternGraph, type: StitchType, parentId: string): PatternGraph;
-  removeLast(graph: PatternGraph): PatternGraph;
+  createNewPattern(start: StartElement): Pattern;
+  addStitch(pattern: Pattern, type: StitchType, 
+      insertInto?: StitchId | StitchId[],
+      insertion?: Insertion): Result<Pattern>;
+  removeLastStitch(pattern: Pattern): Result<Pattern>;
   // ... pozostałe operacje z US-01..US-05
-  validateInsertion(type: StitchType, target: Stitch): boolean;
+  validateInsertion(type: StitchType, target: StitchId): boolean;
 }
 
 // Layout
-interface LayoutNode {
-  id: string;
-  x: number; y: number;
-  rotation: number;          // radiany, baza w stronę rodzica
-  scaleX: number; scaleY: number;
-  width: number; height: number;  // po skalowaniu
+interface StitchPlacement {
+  x: number;           // środek symbolu, jednostki modelu
+  y: number;
+  rotation: number;    // radiany; 0 = podstawa symbolu na dole
+  sw: number;          // skala szerokości: W = baseWidth * sw
+  sh: number;          // skala wysokości:  H = baseHeight * sh
 }
 
-interface LayoutResult {
-  nodes: LayoutNode[];
-  seed: number;
-  metrics: { overlapAreaRatio: number; aspectViolations: number };
+interface Layout {
+  placements: Readonly<Record<StitchId, StitchPlacement>>;
+  bounds: { minX: number; minY: number; maxX: number; maxY: number };
 }
 
-interface LayoutService {
-  compute(graph: PatternGraph, options?: LayoutOptions): Promise<LayoutResult>;
+type LayoutResult =
+  | { ok: true; layout: Layout; diagnostics: LayoutDiagnostics }
+  | { ok: false; error: string };
+
+interface LayoutEngine {
+  computeLayout(p: Pattern, options?: LayoutOptions): Promise<LayoutResult>;
 }
 \end{verbatim}
 
 \subsection{Moduły szczegółowe (katalogi)}
 
+Kod źródłowy jest podzielony na katalogi odpowiadające modułom z rysunku~\ref{fig:architecture}:
+
 \begin{itemize}
-  \item \textbf{model/} -- implementacja PatternGraph, operacje immutable, walidatory reguł szydełkowych.
-  \item \textbf{layout/} -- algorytmy rozmieszczania + adapter do zewnętrznej biblioteki + worker entrypoint.
-  \item \textbf{controller/} (lub store/) -- stan aplikacji, historia undo/redo, selektory, koordynacja wywołań.
-  \item \textbf{ui/editor/} -- Canvas SVG, SymbolRenderer, InteractionLayer (hit-testing, selection).
-  \item \textbf{ui/panels/} -- Palette, Properties, Toolbar, LayerIndicator.
-  \item \textbf{persist/} -- JSON schema + serializers; AutosaveService; FileExporter (SVG/PNG/JPEG/PDF).
-  \item \textbf{symbols/} -- definicje ścieżek SVG i metadanych (preferowane aspect ratio, anchor points) dla każdego typu oczka.
+  \item \textbf{contracts/} -- typy i interfejsy współdzielone przez moduły, w szczególności kontrakt modułu algorytmicznego. Nie zawiera logiki.
+  \item \textbf{model/} -- model wzoru: graf oczek, operacje jego modyfikacji, reguły walidacji oraz katalog rodzajów oczek z ich geometrią.
+  \item \textbf{layout/} -- moduł algorytmiczny: wstępne rozmieszczenie nowych oczek, wymienne algorytmy pełnego przeliczenia układu i adaptery zewnętrznych bibliotek.
+  \item \textbf{controller/} -- stan aplikacji (wzór i układ), historia operacji, koordynacja wywołań.
+  \item \textbf{ui/} -- interfejs użytkownika: obszar schematu, panele i symbole oczek.
+  \item \textbf{persist/} -- zapis i odczyt projektu oraz eksport schematu.
 \end{itemize}
 
-Zależności zewnętrzne są izolowane w warstwie infrastructure (adapter + Web Worker), co ułatwia testowanie domeny i layoutu bez przeglądarki (NFR-M1) oraz wymianę biblioteki układu grafów bez zmian w reszcie systemu.
+Katalogi \texttt{model/} i \texttt{layout/} nie zależą od interfejsu użytkownika ani od API przeglądarki, dzięki czemu można je testować niezależnie (por. NFR-M1, NFR-M3), a wymiana biblioteki układu grafów wymaga zmian wyłącznie w module algorytmicznym.
 
 \pagebreak
 
 \section{Komunikacja}
 
-Aplikacja jest w pełni client-side, więc nie występują protokoły sieciowe ani konfiguracja serwerów. Komunikacja wewnętrzna:
+Aplikacja działa w całości po stronie klienta, dlatego nie występują w niej protokoły sieciowe ani komunikacja z serwerem. Komunikacja między modułami przebiega następująco:
 
 \begin{itemize}
-  \item \textbf{UI $\leftrightarrow$ Kontroler} -- React hooks + subskrypcje; zmiany stanu wywołują re-render tylko zainteresowanych komponentów.
-  \item \textbf{Kontroler $\leftrightarrow$ Model wzoru} -- synchroniczne wywołania funkcji czystych (immutable updates). Każda operacja użytkownika tworzy nowy snapshot grafu i wpis w historii.
-  \item \textbf{Kontroler $\leftrightarrow$ Moduł algorytmiczny} -- asynchroniczne: po każdej zmianie grafu wysyłany jest komunikat \texttt{postMessage} do Web Workera z serializowanym grafem + seedem. Worker zwraca LayoutResult. W czasie obliczeń UI pozostaje responsywny (NFR-P3).
-  \item \textbf{Adapter $\leftrightarrow$ biblioteka zewnętrzna} -- wywołania API wybranej biblioteki (d3-force / WebCola lub innej); konwersja formatów po obu stronach.
-  \item \textbf{Persist} -- File System Access API (tam gdzie dostępne) lub klasyczne \texttt{<input type="file">} + download link; localStorage dla autosave co $\leq$ 30~s (NFR-R3).
+  \item \textbf{UI $\leftrightarrow$ Kontroler} -- UI przekazuje akcje użytkownika do kontrolera, a komponenty subskrybują wybrane fragmenty stanu. Zmiana stanu powoduje ponowne wyrenderowanie wyłącznie komponentów, których dotyczy.
+  \item \textbf{Kontroler $\leftrightarrow$ Model wzoru} -- synchroniczne wywołania czystych funkcji. Każda operacja zwraca nową wersję wzoru albo opis błędu; nowa wersja wraz z układem symboli trafia do historii operacji.
+  \item \textbf{Kontroler $\leftrightarrow$ Moduł algorytmiczny} -- dwa tryby:
+  \begin{itemize}
+    \item \emph{wstępne rozmieszczenie} nowo dodanych oczek -- synchroniczne wywołanie w głównym wątku po każdej zmianie wzoru, bez zmiany położenia pozostałych symboli,
+    \item \emph{pełne przeliczenie układu} -- na żądanie użytkownika, asynchronicznie w osobnym wątku (Web Worker). Kontroler wysyła komunikat (\texttt{postMessage}) z wzorem, poprzednim układem i parametrami obliczeń, a wątek zwraca \texttt{LayoutResult}. Każde żądanie ma identyfikator; odpowiedzi na żądania nieaktualne lub anulowane są pomijane. W czasie obliczeń interfejs pozostaje responsywny (NFR-P3).
+  \end{itemize}
+  \item \textbf{Adapter $\leftrightarrow$ biblioteka zewnętrzna} -- wywołania API wybranej biblioteki układu grafów wewnątrz wątku obliczeniowego, z konwersją danych w obu kierunkach.
+  \item \textbf{Zapis i odczyt} -- projekt (wzór i układ) jest zapisywany do pliku pobieranego przez przeglądarkę i wczytywany przez standardowe okno wyboru pliku; w przeglądarkach, które to obsługują, można dodatkowo użyć File System Access API. Autozapis do pamięci lokalnej przeglądarki co najwyżej co 30~s (NFR-R3).
 \end{itemize}
 
-Biblioteki komunikacyjne: natywne Web Worker API, structured clone algorithm (dla postMessage). Brak WebSocketów, HTTP clientów czy message brokerów.
+Do komunikacji wykorzystywane są wyłącznie mechanizmy wbudowane w przeglądarkę: API Web Workerów i algorytm structured clone przy przesyłaniu danych między wątkami.
 
 \pagebreak
 
-\section{Główne komponenty -- opisy i diagramy}
+\section{Projekt szczegółowy: model danych i zachowanie systemu}
 
-\subsection{Model danych (Domain)}
+\subsection{Model danych (Domena)}
+\label{sec:data-model}
 
-Wierzchołki grafu odpowiadają oczkom. Krawędzie skierowane reprezentują relację „wbite w”. Dodatkowo utrzymywana jest lista kolejności dodawania (dla undo i pozycji nici) oraz numer warstwy.
+Wzór jest reprezentowany jako graf skierowany. Węzły odpowiadają punktom wbicia -- najczęściej oczkom, ale także otworom, w które można wbić kolejne oczka. Krawędzie są skierowane od węzła nowszego do starszego i należą do jednego z czterech rodzajów: \emph{previous} (skąd wychodzi nić), \emph{insertion} (w co oczko jest wbite, wraz ze sposobem wbicia), \emph{slip-stitch} (oczko ścisłe) oraz \emph{surrounding} (połączenie otworu z oczkami na jego brzegu). Wzór przechowuje również pozycję nici (kursor) i numer bieżącej warstwy. Układ symboli nie jest częścią modelu -- wyznacza go moduł algorytmiczny.
+
+Model danych został oparty na grafowej reprezentacji wzorów szydełkowych zaproponowanej przez Seitz i in.~\cite{seitz2022digital, seitz2021language}. Przejęto z niej podstawowe założenia: węzły grafu odpowiadają punktom wbicia, a nie bezpośrednio oczkom; krawędzie opisują pochodzenie nici (\emph{previous}), wbicie oczka (\emph{insertion}) i oczko ścisłe (\emph{slip-stitch}); otwory w robótce są reprezentowane jako osobne węzły połączone z oczkami na ich brzegu; rzędy i okrążenia są ujednolicone w pojęcie warstwy, a sposób wbicia (np. tylko pod tylną nitkę) jest właściwością krawędzi wbicia.
+
+W stosunku do rozwiązania autorów wprowadzono następujące zmiany:
+\begin{itemize}
+  \item informacje o połączeniach między oczkami są przechowywane wyłącznie w krawędziach, bez powielania ich w węzłach,
+  \item model nie zawiera informacji o położeniu symboli -- układ jest wyznaczany i przechowywany oddzielnie przez moduł algorytmiczny,
+  \item każde oczko ma numer porządkowy, a wzór przechowuje bieżącą pozycję nici, co upraszcza operacje edycji.
+\end{itemize}
 
 \begin{center}
 \begin{tikzpicture}[
-  node distance=1.5cm,
-  class/.style={draw, rectangle, rounded corners, align=left, font=\ttfamily\small, minimum width=4.5cm},
-  inh/.style={->, thick}
+  class/.style={draw, rectangle, rounded corners, align=left, font=\ttfamily\small, inner sep=5pt},
+  comp/.style={{Diamond[length=8pt, width=6pt]}-, thick},
+  assoc/.style={->, thick},
+  mult/.style={font=\scriptsize}
 ]
-  \node[class] (stitch) {
-    \textbf{Stitch}\\
-    + id: string\\
+  \node[class, anchor=north] (pattern) at (0, 0) {
+    \textbf{Pattern}\\[2pt]
+    + stitches: Record<StitchId, Stitch>\\
+    + edges: Edge[]\\
+    + cursor: StitchId | null\\
+    + currentLayer: number\\
+    + nextOrder: number
+  };
+  \node[class, anchor=north] (stitch) at (-4.6, -4.2) {
+    \textbf{Stitch}\\[2pt]
+    + id: StitchId\\
     + type: StitchType\\
-    + parentIds: string[]\\
-    + round: number\\
-    + metadata: object
+    + layer: number\\
+    + order: number
   };
-  \node[class, below=of stitch] (graph) {
-    \textbf{PatternGraph}\\
-    + stitches: Map\\
-    + yarnPosition: string|null\\
-    + currentRound: number\\
-    + history: PatternGraph[]
+  \node[class, anchor=north] (edge) at (4.6, -4.2) {
+    \textbf{Edge}\\[2pt]
+    + kind: EdgeKind\\
+    + from: StitchId\\
+    + to: StitchId\\
+    + insertion?: Insertion
   };
-  \draw[inh] (graph) -- (stitch);
+
+  \draw[comp] ($(pattern.south)+(-1.8,0)$) -- node[mult, pos=0.75, left]{1..*} (stitch.north);
+  \draw[comp] ($(pattern.south)+(1.8,0)$) -- node[mult, pos=0.75, right]{0..*} (edge.north);
+  \draw[assoc] (edge.west) -- node[mult, below]{from, to} (stitch.east);
 \end{tikzpicture}
 \end{center}
 
-\subsection{Stany aplikacji (uproszczony diagram stanów)}
+\subsection{Stan układu symboli}
+
+Po każdej zmianie wzoru nowe oczka otrzymują wstępne położenie, a układ zostaje oznaczony jako nieaktualny. Pełne przeliczenie odbywa się na żądanie użytkownika.
 
 \begin{center}
 \begin{tikzpicture}[
-  state/.style={draw, rounded corners, align=center, minimum width=2.2cm, minimum height=0.9cm, font=\small},
+  state/.style={draw, rounded corners, align=center, minimum width=2.6cm, minimum height=0.9cm, font=\small},
   arrow/.style={->, thick}
 ]
-  \node[state] (idle) {Idle\\(gotowy)};
-  \node[state, right=2.5cm of idle] (editing) {Edycja\\wzoru};
-  \node[state, below=1.3cm of editing] (layouting) {Przeliczanie\\layoutu};
-  \node[state, left=2.5cm of layouting] (exporting) {Eksport};
-  
-  \draw[arrow] (idle) -- node[above,font=\scriptsize]{add/remove/edit} (editing);
-  \draw[arrow] (editing) -- node[right,font=\scriptsize]{zmiana grafu} (layouting);
-  \draw[arrow] (layouting) -- node[below,font=\scriptsize]{LayoutResult} (idle);
-  \draw[arrow] (idle) -- node[left,font=\scriptsize]{eksport} (exporting);
-  \draw[arrow] (exporting) -- (idle);
+  \node[state] (current) {Aktualny};
+  \node[state, right=3cm of current] (stale) {Nieaktualny};
+  \node[state, below=1.6cm of $(current)!0.5!(stale)$] (computing) {Przeliczanie};
+
+  \draw[arrow] (current) -- node[above, font=\scriptsize]{zmiana wzoru} (stale);
+  \draw[arrow] (stale) edge[loop right] node[right, font=\scriptsize]{zmiana wzoru} (stale);
+  \draw[arrow] (stale) -- node[right, font=\scriptsize, align=left]{żądanie\\przeliczenia} (computing);
+  \draw[arrow] (computing) -- node[left, font=\scriptsize]{wynik} (current);
+  \draw[arrow, bend right=35] (computing) to node[below right, font=\scriptsize, align=left]{błąd, anulowanie\\lub zmiana wzoru} (stale);
 \end{tikzpicture}
 \end{center}
 
 \subsection{Aktywność: dodanie oczka (US-02)}
 
 \begin{enumerate}
-  \item Użytkownik wybiera typ z palety $\to$ stan „pending stitch type”.
-  \item Kliknięcie symbolu na schemacie $\to$ walidacja reguły wbicia (Model wzoru).
-  \item Jeśli OK: nowy Stitch + aktualizacja grafu + wpis do historii (Kontroler).
-  \item Wywołanie LayoutService.compute() w Workerze (przez Adapter).
-  \item Po otrzymaniu wyniku: aktualizacja pozycji w Kontrolerze $\to$ re-render SVG.
-  \item Jeśli błąd walidacji: komunikat, brak zmiany modelu.
+  \item Użytkownik wybiera rodzaj oczka z palety.
+  \item Użytkownik klika punkt wbicia na schemacie; UI przekazuje akcję do kontrolera.
+  \item Kontroler wywołuje operację modelu \texttt{addStitch}, która sprawdza poprawność wbicia.
+  \item Jeśli operacja się nie powiedzie, UI wyświetla komunikat z przyczyną, a wzór pozostaje bez zmian.
+  \item W przeciwnym razie kontroler wywołuje \texttt{placeNewStitches}, które wyznacza położenie nowego oczka bez zmiany położenia pozostałych.
+  \item Kontroler zapisuje nową parę wzór + układ w historii operacji i oznacza układ jako nieaktualny.
+  \item UI wyświetla nowe oczko na schemacie.
 \end{enumerate}
 
 \subsection{Zdarzenia kluczowe}
@@ -444,5 +493,8 @@ Na podstawie literatury (m.in. Greer \& Mould 2025 -- \textit{Modeling Crochet P
 
 Node.js + npm/pnpm, ESLint + Prettier, Git. Testy w CI (GitHub Actions). Brak zależności od konkretnego systemu operacyjnego -- rozwój możliwy na Windows / macOS / Linux. Wersje narzędzi są przypięte (\texttt{.nvmrc}, \texttt{package-lock.json} / \texttt{pnpm-lock.yaml}).
 
+\pagebreak
+
+\printbibliography[heading=bibintoc, title={Bibliografia}]
 
 \end{document}
