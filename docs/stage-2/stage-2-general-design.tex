@@ -83,6 +83,8 @@ Promotor: \\
   \hline
   \textbf{1.0} & 29.10.2026 & Wiktor Murawski & \textit{Pierwsza wersja dokumentu -- szkielet architektury, wybór technologii, opis modułów} \\
   \hline
+  \textbf{1.1} & 1.11.2026 & Anna Babicka & \textit{Wprowadzenie poprawek dotyczących szczegółów projektu modułu algorytmicznego} \\
+  \hline
 \end{tabularx}
 
 \pagebreak
@@ -294,7 +296,8 @@ W stosunku do rozwiązania autorów wprowadzono następujące zmiany:
   \item każde oczko ma numer porządkowy, a wzór przechowuje bieżącą pozycję nici, co upraszcza operacje edycji.
 \end{itemize}
 
-\begin{center}
+\begin{figure}[htbp]
+\centering
 \begin{tikzpicture}[
   class/.style={draw, rectangle, rounded corners, align=left, font=\ttfamily\small, inner sep=5pt},
   comp/.style={{Diamond[length=8pt, width=6pt]}-, thick},
@@ -328,13 +331,16 @@ W stosunku do rozwiązania autorów wprowadzono następujące zmiany:
   \draw[comp] ($(pattern.south)+(1.8,0)$) -- node[mult, pos=0.75, right]{0..*} (edge.north);
   \draw[assoc] (edge.west) -- node[mult, below]{from, to} (stitch.east);
 \end{tikzpicture}
-\end{center}
+\caption{Model danych wzoru}
+\label{fig:data-model}
+\end{figure}
 
 \subsection{Stan układu symboli}
 
 Po każdej zmianie wzoru nowe oczka otrzymują wstępne położenie, a układ zostaje oznaczony jako nieaktualny. Pełne przeliczenie odbywa się na żądanie użytkownika.
 
-\begin{center}
+\begin{figure}[htbp]
+\centering
 \begin{tikzpicture}[
   state/.style={draw, rounded corners, align=center, minimum width=2.6cm, minimum height=0.9cm, font=\small},
   arrow/.style={->, thick}
@@ -349,19 +355,30 @@ Po każdej zmianie wzoru nowe oczka otrzymują wstępne położenie, a układ zo
   \draw[arrow] (computing) -- node[left, font=\scriptsize]{wynik} (current);
   \draw[arrow, bend right=35] (computing) to node[below right, font=\scriptsize, align=left]{błąd, anulowanie\\lub zmiana wzoru} (stale);
 \end{tikzpicture}
-\end{center}
+\caption{Diagram stanów układu symboli}
+\label{fig:layout-states}
+\end{figure}
 
 \subsection{Aktywność: dodanie oczka (US-02)}
 
-\begin{enumerate}
-  \item Użytkownik wybiera rodzaj oczka z palety.
-  \item Użytkownik klika punkt wbicia na schemacie; UI przekazuje akcję do kontrolera.
-  \item Kontroler wywołuje operację modelu \texttt{addStitch}, która sprawdza poprawność wbicia.
-  \item Jeśli operacja się nie powiedzie, UI wyświetla komunikat z przyczyną, a wzór pozostaje bez zmian.
-  \item W przeciwnym razie kontroler wywołuje \texttt{placeNewStitches}, które wyznacza położenie nowego oczka bez zmiany położenia pozostałych.
-  \item Kontroler zapisuje nową parę wzór + układ w historii operacji i oznacza układ jako nieaktualny.
-  \item UI wyświetla nowe oczko na schemacie.
-\end{enumerate}
+Diagram~\ref{fig:sequence-add-stitch} przedstawia przebieg dodania oczka (US-02). Kontroler przekazuje żądanie do modelu wzoru, który sprawdza poprawność wbicia. W przypadku błędu wzór pozostaje bez zmian, a użytkownik otrzymuje komunikat z przyczyną. W przeciwnym razie moduł algorytmiczny wyznacza położenie nowego oczka bez zmiany położenia pozostałych symboli, a kontroler zapisuje nową wersję wzoru wraz z układem w historii operacji i oznacza układ jako wymagający pełnego przeliczenia.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{img/flowchart.png}
+  \caption{Diagram sekwencji dodania oczka}
+  \label{fig:sequence-add-stitch}
+\end{figure}
+
+% \begin{enumerate}
+%   \item Użytkownik wybiera rodzaj oczka z palety.
+%   \item Użytkownik klika punkt wbicia na schemacie; UI przekazuje akcję do kontrolera.
+%   \item Kontroler wywołuje operację modelu \texttt{addStitch}, która sprawdza poprawność wbicia.
+%   \item Jeśli operacja się nie powiedzie, UI wyświetla komunikat z przyczyną, a wzór pozostaje bez zmian.
+%   \item W przeciwnym razie kontroler wywołuje \texttt{placeNewStitches}, które wyznacza położenie nowego oczka bez zmiany położenia pozostałych.
+%   \item Kontroler zapisuje nową parę wzór + układ w historii operacji i oznacza układ jako nieaktualny.
+%   \item UI wyświetla nowe oczko na schemacie.
+% \end{enumerate}
 
 \subsection{Zdarzenia kluczowe}
 
@@ -404,9 +421,9 @@ Interfejs jest jednookienkowy, zorientowany na maksymalną przestrzeń roboczą 
 
 \begin{itemize}
   \item Kliknięcie symbolu w palecie + kliknięcie na schemacie = dodanie oczka (US-02).
-  \item Kółko myszy / przyciski +/– = zoom względem kursora (US-07).
-  \item Przeciąganie tła = pan.
-  \item Ctrl+Z / Ctrl+Y = undo/redo (US-06).
+  \item Kółko myszy / przyciski +/– = przybliżanie i oddalanie względem kursora (US-07).
+  \item Przeciąganie tła = przesuwanie widoku.
+  \item Ctrl+Z / Ctrl+Y = cofnij/ponów (US-06).
   \item Podwójne kliknięcie lub panel właściwości = zmiana typu / parametrów.
   \item Wskaźnik postępu / spinner na canvasie podczas długiego layoutu (>200\,ms).
 \end{itemize}
@@ -419,16 +436,19 @@ Wizualizacje (makiety) zostaną doprecyzowane w kolejnej iteracji dokumentu lub 
 
 \subsection{Format pliku projektu (JSON)}
 
-Własny, wersjonowany format JSON (schema w osobnym pliku JSON Schema):
+Projekt jest zapisywany we własnym, wersjonowanym formacie JSON (schema w osobnym pliku JSON Schema). Plik zawiera wyłącznie wzór; układ symboli jest po wczytaniu odtwarzany na podstawie grafu. Opcjonalnie zapisywany jest stan widoku (przybliżenie i przesunięcie).
 
 \begin{verbatim}
 {
   "version": "1.0",
   "meta": { "title": "...", "created": "...", "seed": 12345 },
   "pattern": {
-    "stitches": [ { "id": "...", "type": "dc", "parents": ["..."], "round": 2 }, ... ],
-    "yarnPosition": "...",
-    "currentRound": 3
+    "stitches": [ { "id": "...", "type": "dc", "round": 2 }, ... ],
+    "edges": [
+      { "kind": "previous",  "from": "...", "to": "...", ... }, ... ],
+    "cursor": "...",
+    "currentLayer": 3,
+    "nextOrder": 2
   },
   "view": { "zoom": 1.0, "panX": 0, "panY": 0 }   // opcjonalnie
 }
@@ -438,10 +458,12 @@ Zachowanie 100\% danych strukturalnych (NFR-R1). Niepoprawny plik $\to$ komunika
 
 \subsection{Eksport graficzny}
 
+Eksport obejmuje cały schemat, niezależnie od bieżącego przybliżenia i przesunięcia widoku, i nie zawiera elementów interfejsu (zaznaczenia, wskaźnika pozycji nici). Skala eksportu jest niezależna od skali widoku.
+
 \begin{itemize}
   \item \textbf{SVG} -- natywny, wektorowy, zachowuje symbole jako \texttt{<g>} / \texttt{<path>}.
-  \item \textbf{PNG / JPEG} -- rasteryzacja SVG przez OffscreenCanvas lub tymczasowy \texttt{<canvas>}.
-  \item \textbf{PDF} -- jsPDF + svg2pdf.js lub podobna biblioteka; jedna strona A4 / Letter z dopasowanym schematem.
+  \item \textbf{PNG / JPEG} -- rasteryzacja SVG przez OffscreenCanvas lub tymczasowy \texttt{<canvas>} w wybranej skali.
+  \item \textbf{PDF} -- konwersja schematu SVG do dokumentu PDF z zachowaniem grafiki wektorowej; biblioteka do wyboru na etapie implementacji (kandydat: jsPDF z rozszerzeniem svg2pdf.js).
 \end{itemize}
 
 Brak integracji z zewnętrznymi usługami (brak OAuth, API chmurowych itp.). Standardy: SVG 1.1 / 2, JSON (RFC 8259), File API / File System Access API.
@@ -487,7 +509,7 @@ Poniższa tabela przedstawia technologie przyjęte w projekcie wraz z rozważany
 
 \subsection{Uzasadnienie wyboru podejścia do layoutu}
 
-Na podstawie literatury (m.in. Greer \& Mould 2025 -- \textit{Modeling Crochet Patterns with a Force-directed Graph Layout}) oraz analizy istniejących narzędzi (CrochetPARADE, Stitch Fiddle) wybrano podejście force-directed / constraint-based. Nie tworzymy nowego algorytmu od zera; wartość inżynierska leży w integracji, dostosowaniu sił (orientacja symboli względem rodzica, preferowane proporcje H/W, minimalizacja nakładania) oraz zapewnieniu interaktywności (Web Worker, determinizm przy seedzie). Adapter bibliotek pozwala na ewentualną wymianę implementacji bez wpływu na resztę systemu.
+Na podstawie literaturym.in. pracy Greer i Moulda~\cite{greer2025modeling}, w której wzór szydełkowy przekształcany jest w graf rozmieszczany algorytmem typu force-directed, oraz analizy istniejących narzędzi (CrochetPARADE~\cite{crochetparade}, Stitch Fiddle~\cite{stitchfiddle}) wybrano podejście force-directed / constraint-based. Nie tworzymy nowego algorytmu od zera; wartość inżynierska leży w integracji, dostosowaniu sił (orientacja symboli względem rodzica, preferowane proporcje H/W, minimalizacja nakładania) oraz zapewnieniu interaktywności (Web Worker, determinizm przy seedzie). Adapter bibliotek pozwala na ewentualną wymianę implementacji bez wpływu na resztę systemu.
 
 \subsection{Środowisko deweloperskie}
 
