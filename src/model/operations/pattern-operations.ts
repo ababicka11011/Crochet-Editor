@@ -1,8 +1,8 @@
-import type { Stitch, StitchType, StitchId } from '../model/Stitch';
-import type { Insertion, Edge } from '../model/Edge'
-import type { Pattern } from '../contracts/Pattern';
-import type { Result } from '../model/Result';
-import type { Layout } from '../contracts/Layout';
+import type { Stitch, StitchType, StitchId } from '../Stitch';
+import type { Insertion, Edge } from '../Edge'
+import type { Pattern } from '../../contracts/Pattern';
+import type { Result } from '../Result';
+import type { Layout } from '../../contracts/Layout';
 
 export function startNewPattern(method: 'ch' | 'mr'): Pattern {
   /*

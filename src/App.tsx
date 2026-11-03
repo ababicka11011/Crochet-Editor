@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import styles from './styles/App.module.css';
 import type { Pattern } from './contracts/Pattern';
-import { addStitch, increaseRound, startNewPattern } from './utils/pattern-operations'
+import { addStitch, increaseRound, startNewPattern } from './model/operations/pattern-operations'
 
 function App() {
   // Create a sample pattern when the component mounts
