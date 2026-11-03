@@ -8,4 +8,5 @@ export interface Edge {
     from: StitchId
     to: StitchId
     insertion?: Insertion
+    layer?: number
 }

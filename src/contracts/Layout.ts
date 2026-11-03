@@ -23,7 +23,7 @@ export interface LayoutOptions {
 }
 
 export type LayoutResult =
-  | { ok: true; layout: Layout; diagnostics: LayoutDiagnostics }
+  | { ok: true; layout: Layout; diagnostics?: LayoutDiagnostics }
   | { ok: false; error: string };
 
 //   type LayoutResult =
@@ -34,5 +34,5 @@ export type LayoutResult =
 export interface LayoutDiagnostics {
     // for results of various metrics regarding layout quality, e.g. percent of collisions, 
     // number of deformed stitches
-    deformed_stitches?: number
+    deformed_stitches: number
 }

@@ -7,6 +7,4 @@ export interface Stitch {
   layer: number
   previous: StitchId | null
   surroundingNodes: StitchId[] | null
-  // x: number
-  // y: number
 }

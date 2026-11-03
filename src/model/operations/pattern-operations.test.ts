@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Pattern } from '../../contracts/Pattern';
 import type { Result } from '../Result';
 import {
+  addSlipStitch,
   addStitch,
   removeLastStitch,
   startNewPattern,
@@ -43,6 +44,15 @@ describe('addStitch', () => {
       { kind: 'insertion', from: 'stitch-3', to: 'stitch-0', insertion: 'both-loops' },
       { kind: 'insertion', from: 'stitch-3', to: 'stitch-1', insertion: 'both-loops' },
     ]);
+  });
+
+  it('adds multiple stitches to one target stitch', () => {
+    const base = chainOf(3);
+    const pattern1 = unwrap(addStitch(base, 'sc', 'stitch-1', 'both-loops'));
+    const pattern2 = unwrap(addStitch(pattern1, 'sc', 'stitch-1', 'both-loops'));
+
+    expect(pattern2.edges.filter((e) => e.kind === 'insertion').length).toBe(2);
+    expect(Object.keys(pattern2.stitches).length).toBe(5);
   });
 
   it('does not mutate the pattern it was given', () => {
@@ -119,5 +129,15 @@ describe('removeLastStitch', () => {
     unwrap(removeLastStitch(base));
 
     expect(JSON.stringify(base)).toBe(snapshot);
+  });
+
+  // test for removing a slip stitch and its effect on the cursor and edges
+  it('removes a slip stitch and moves the cursor back to the stitch it was slipped into', () => {
+    const base = chainOf(5);
+    const withSlip = unwrap(addSlipStitch(base, 'stitch-1'));
+    const pattern = unwrap(removeLastStitch(withSlip));
+
+    expect(pattern.cursor).toBe('stitch-4');
+    expect(pattern.edges.some((e) => e.kind === 'slip-stitch')).toBe(false);
   });
 });

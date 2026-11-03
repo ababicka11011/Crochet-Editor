@@ -38,7 +38,7 @@ export function placeNewStitches(pattern: Pattern, layout: Layout, newIds: Stitc
                     // If we can't determine a direction, just place it next to the last stitch
                     d = { x: 1, y: 0 }; // default direction to the right
                 }
-                const previousNodePlacement = pattern.layout.placements[previousOf(pattern, id)!];
+                const previousNodePlacement = layout.placements[previousOf(pattern, id)!];
                 const prevPos: Vec = {x: previousNodePlacement.x ?? 0, y: previousNodePlacement.y ?? 0};
 
                 const newPos_ch = add(prevPos, scale(d, stitchGeometry.height));
@@ -106,5 +106,17 @@ export function placeNewStitches(pattern: Pattern, layout: Layout, newIds: Stitc
         }
     });
 
-    return { ok: true, layout: newLayout, diagnostics: { } };
+    return { ok: true, layout: newLayout };
+}
+
+export function pruneLayout(pattern: Pattern, layout: Layout): LayoutResult {
+    const newLayout: Layout = { ...layout };
+
+    // Remove placements for stitches that no longer exist in the pattern
+    for (const id in newLayout.placements) {
+        if (!pattern.stitches[id]) {
+            delete newLayout.placements[id];
+        }
+    }
+    return { ok: true, layout: newLayout };
 }

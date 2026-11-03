@@ -2,7 +2,6 @@ import type { Stitch, StitchType, StitchId } from '../Stitch';
 import type { Insertion, Edge } from '../Edge'
 import type { Pattern } from '../../contracts/Pattern';
 import type { Result } from '../Result';
-import type { Layout } from '../../contracts/Layout';
 
 export function startNewPattern(method: 'ch' | 'mr'): Pattern {
   /*
@@ -20,18 +19,18 @@ export function startNewPattern(method: 'ch' | 'mr'): Pattern {
     surroundingNodes: null
   };
 
-  const layout: Layout = { 
-    placements: { [initialStitch.id]: {x: 700, y: 320, rotation: 0, sw: 1, sh: 1} },
-    bounds: { minX: 0, minY: 0, maxX: 1000, maxY: 1000}
-  }
+  // const layout: Layout = { 
+  //   placements: { [initialStitch.id]: {x: 700, y: 320, rotation: 0, sw: 1, sh: 1} },
+  //   bounds: { minX: 0, minY: 0, maxX: 1000, maxY: 1000}
+  // }
 
   // Return the initial pattern object with the first stitch and no edges
   return {
     stitches: { [initialStitch.id]: initialStitch },
     edges: [],
     cursor: initialStitch.id,
-    currentRound: 0,
-    layout: layout
+    currentLayer: 0,
+    nextOrder: 1,
   };
 }
 
@@ -43,20 +42,13 @@ export function addStitch(pattern: Pattern, type: StitchType,
   Returns a Result object containing either the updated pattern or an error message.
   */
 
-  // Walidacja wejścia. Sprawdź, czy wskazane id istnieją, czy typ oczka dopuszcza wbicie (isChain → brak insertInto) i czy nie powstaje cykl w krawędziach worked-into.
-  // Wyliczenie pochodnych. Ustal nowe id, kolejne order, round (np. od oczka-rodzica + 1) i poprzednie oczko dla krawędzi sequence.
-  // Budowa nowego stanu. Zwróć nowy obiekt: stitches z dodanym wpisem i edges z dopisanymi krawędziami. Nie modyfikuj p.
-  // Zwrot wyniku. { ok: true, value } albo { ok: false, error }.
-  // console.log('Adding stitch:', newStitchId, 'Type:', type, 'Insert into:', insertInto, 'Insertion:', insertion);
-  
   // 1. Reject chain stitches that try to insert into something
   if (type === 'ch' && insertInto !== undefined) {
     return { ok: false, error: 'Chain stitches cannot be inserted into other stitches' };
   }
 
   // 2. Validate all insertion targets exist
-  const targets = insertInto === undefined
-    ? []
+  const targets = insertInto === undefined ? []
     : Array.isArray(insertInto) ? insertInto : [insertInto];
 
   for (const id of targets) {
@@ -65,14 +57,11 @@ export function addStitch(pattern: Pattern, type: StitchType,
     }
   }
 
-  // Choose the anchor stitch for positioning the new stitch. If insertInto is provided, use the first id in the array; otherwise, use the current cursor.
-  const anchorId = Array.isArray(insertInto) ? insertInto[0] : insertInto;
-  
   // Create the new stitch object with calculated properties based on the current pattern and provided parameters.
   const newStitch: Stitch = {
-    id: `stitch-${Object.keys(pattern.stitches).length}`,
+    id: `stitch-${pattern.nextOrder}`,
     type,
-    layer: pattern.currentRound,
+    layer: pattern.currentLayer,
     previous: pattern.cursor,
     surroundingNodes: null, // add hole support later
   };
@@ -80,21 +69,12 @@ export function addStitch(pattern: Pattern, type: StitchType,
   // previousEdge is not needed since we already have previous in the stitch object, but we can keep it for calculating position.
   const previousEdge: Edge = { kind: 'previous', from: newStitch.id, to: pattern.cursor || '' };
   
-  // Create new layout with position of the new stitch
-  const newLayout: Layout = { ...pattern.layout,
-    placements: { ...pattern.layout.placements, [newStitch.id]: {
-      x: anchorId !== undefined ? pattern.layout.placements[anchorId]?.x
-      : ( pattern.layout.placements[pattern.cursor ?? '']?.x ?? 0) - 20 * (pattern.currentRound % 2 == 0 ? 1 : -1), // compute x based on insertInto and insertion if provided, 
-      y: 320 - pattern.currentRound * 20, 
-      rotation: 0, sw: 1, sh: 1} },
-  }
-
   // Create the new pattern object by adding the new stitch and edge to the existing pattern.
   const newPattern: Pattern = { ...pattern, 
     stitches: { ...pattern.stitches, [newStitch.id]: newStitch }, 
     edges: [...pattern.edges, previousEdge], 
     cursor: newStitch.id,
-    layout: newLayout
+    nextOrder: pattern.nextOrder + 1,
   };
   
   // If insertInto is provided, create insertion edges for each specified stitch id.
@@ -125,6 +105,17 @@ export function removeLastStitch(pattern: Pattern): Result<Pattern> {
     return { ok: false, error: "No stitches to remove" };
   }
 
+  const lastSlipStitchEdge = pattern.edges.findLast(
+    edge => edge.kind === 'slip-stitch' && edge.to === pattern.cursor
+  );
+
+  if (lastSlipStitchEdge) {
+    // If the last stitch is a slip stitch, we need to remove it and update the cursor to the target of the slip stitch
+    const newEdges = pattern.edges.filter(edge => edge !== lastSlipStitchEdge);
+    const newPattern: Pattern = { ...pattern, edges: newEdges, cursor: lastSlipStitchEdge.from, currentLayer: pattern.currentLayer - 1 };
+    return { ok: true, value: newPattern };
+  }
+
   // Identify the previous stitch based on the current cursor and edges
   // (edge direction is from newer to older, so we look for the edge that points from the cursor)
   const previousEdge = pattern.edges.find(
@@ -137,15 +128,8 @@ export function removeLastStitch(pattern: Pattern): Result<Pattern> {
   delete newStitches[pattern.cursor!]; // remove the current (most recent) stitch
   const newEdges = pattern.edges.filter(edge => edge.from !== pattern.cursor && edge.to !== pattern.cursor);
 
-  const newPlacements = { ...pattern.layout.placements }
-  delete newPlacements[pattern.cursor!];
-
-  const newLayout: Layout = { ...pattern.layout,
-    placements: newPlacements,
-  }
-
   // Create the new pattern object with updated stitches, edges, and cursor
-  const newPattern: Pattern = { ...pattern, stitches: newStitches, edges: newEdges, cursor: previousStitchId, layout: newLayout };
+  const newPattern: Pattern = { ...pattern, stitches: newStitches, edges: newEdges, cursor: previousStitchId, nextOrder: pattern.nextOrder - 1 };
 
   return { ok: true, value: newPattern };
 }
@@ -168,11 +152,11 @@ export function changeStitchType(pattern: Pattern, id: StitchId, newType: Stitch
   return { ok: true, value: newPattern };
 }
 
-export function addSlipStitch(pattern: Pattern, target: StitchId, change_round: boolean = true): Result<Pattern> {
+export function addSlipStitch(pattern: Pattern, target: StitchId, change_layer: boolean = true): Result<Pattern> {
   /*
   Function to add a slip stitch to the crochet pattern. It checks if the target stitch exists, 
   creates a new edge representing the slip stitch, and updates the pattern accordingly.
-  Options to change the round after adding the slip stitch can be specified.
+  Options to change the layer after adding the slip stitch can be specified.
   Returns a Result object containing either the updated pattern or an error message.
   */
   // Check if the current cursor exists and if the target stitch exists in the pattern
@@ -184,20 +168,20 @@ export function addSlipStitch(pattern: Pattern, target: StitchId, change_round: 
   }
 
   // Create a new edge representing the slip stitch and construct the new pattern object with the updated edges and cursor.
-  const newEdge: Edge = { kind: 'slip-stitch', from: pattern.cursor || '', to: target };
+  const newEdge: Edge = { kind: 'slip-stitch', from: pattern.cursor || '', to: target, layer: pattern.currentLayer };
   const newPattern: Pattern = { ...pattern, edges: [...pattern.edges, newEdge], cursor: target,
-    currentRound: change_round ? pattern.currentRound + 1 : pattern.currentRound
+    currentLayer: change_layer ? pattern.currentLayer + 1 : pattern.currentLayer
   };
     
   return { ok: true, value: newPattern };
 }
 
-export function increaseRound(pattern: Pattern): Result<Pattern> {
+export function increaseLayer(pattern: Pattern): Result<Pattern> {
   /*
-  Function to increase the current round of the crochet pattern. It increments the currentRound property of the pattern.
+  Function to increase the current layer of the crochet pattern. It increments the currentLayer property of the pattern.
   Returns a Result object containing either the updated pattern or an error message.
   */
-  const newPattern: Pattern = { ...pattern, currentRound: pattern.currentRound + 1 };
+  const newPattern: Pattern = { ...pattern, currentLayer: pattern.currentLayer + 1 };
   return { ok: true, value: newPattern };
 }
 
