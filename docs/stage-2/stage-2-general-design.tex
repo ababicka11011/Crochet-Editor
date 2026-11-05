@@ -497,13 +497,15 @@ Poniższa tabela przedstawia technologie przyjęte w projekcie wraz z rozważany
   \hline
   \textbf{Repozytorium i CI/CD} & GitHub + GitHub Actions & GitLab CI & Code review przez pull requesty, automatyczne testy przy każdej zmianie, wcześniejsze doświadczenie z GitHub Actions. \\
   \hline
-  \textbf{Zarządzanie stanem} & Zustand (lub Jotai) & Redux Toolkit, React Context & Lekki store, łatwe middleware undo/redo, mniejszy boilerplate. \\
+  \textbf{Zarządzanie stanem} & Jotai & Zustand, Redux Toolkit, React Context & Lekki store, łatwe middleware undo/redo, mniejszy boilerplate. \\
   \hline
   \textbf{Silnik layoutu} & d3-force / WebCola & Własna implementacja, cytoscape.js & Dojrzałe, dobrze udokumentowane implementacje force-directed + constraint-based; możliwość uruchomienia w Web Workerze; izolacja przez adapter. \\
   \hline
   \textbf{Testy} & Vitest + Testing Library & Jest & Natywna integracja z Vite, szybkie uruchamianie, dobre wsparcie TypeScript. \\
   \hline
   \textbf{Eksport PDF} & jsPDF + svg2pdf & pdfkit, puppeteer & Działa w pełni po stronie klienta, bez potrzeby serwera. \\
+  \hline
+  \textbf{Framework CSS} & Tailwind CSS & Bootstrap & Pozwala na tworzenie unikalnych i wydajnych interfejsów bezpośrednio w kodzie HTML, bez ograniczeń narzucanych przez gotowe komponenty. \\
   \hline
 \end{xltabular}
 
