@@ -20,7 +20,13 @@ export function withPlacement(layout: Layout, id: StitchId, pos: { x: number; y:
   const old = layout.placements[id];
   const placements = {
     ...layout.placements,
-    [id]: { rotation: 0, sw: 1, sh: 1, ...old, x: pos.x, y: pos.y },
+    [id]: {
+      x: pos.x,
+      y: pos.y,
+      rotation: old?.rotation ?? 0,
+      sw: old?.sw ?? 1,
+      sh: old?.sh ?? 1,
+    },
   };
   return { placements, bounds: computeBounds(placements) };
 }
