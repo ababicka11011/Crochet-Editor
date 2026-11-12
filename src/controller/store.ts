@@ -1,42 +1,86 @@
 import { atom } from 'jotai';
-import type { Layout, Pattern, Result, StartElement, StitchType } from '../contracts';
-import { StubLayoutEngine, placeNewStitches, rebuildLayout } from '../layout/initialPlacement';
-import { addStitch, createNewPattern, removeLastStitch, startNewLayer } from '../model/pattern';
+import type { Layout, Pattern, Result, StitchType } from '../contracts';
+import {
+  ForceLayoutEngine, emptyLayout, layoutFromPositions, withPlacement,
+} from '../layout/forceLayout';
+import { addEdge, addVertex, emptyPattern, removeLastStitch, startNewLayer } from '../model/pattern';
 import { parseProject } from '../persist/projectFile';
+
+export type Tool = 'vertex' | 'insertion' | 'slip-stitch';
 
 interface Snapshot { pattern: Pattern; layout: Layout }
 interface History { past: Snapshot[]; present: Snapshot; future: Snapshot[] }
 
 // Podmiana na implementację z modułu algorytmicznego (docelowo w Web Workerze).
-const engine = new StubLayoutEngine();
+const engine = new ForceLayoutEngine();
 
-const initialPattern = createNewPattern({ kind: 'chain', count: 5 });
-const initial: Snapshot = { pattern: initialPattern, layout: rebuildLayout(initialPattern) };
-
-export const historyAtom = atom<History>({ past: [], present: initial, future: [] });
+export const historyAtom = atom<History>({
+  past: [],
+  present: { pattern: emptyPattern(), layout: emptyLayout() },
+  future: [],
+});
 export const patternAtom = atom((get) => get(historyAtom).present.pattern);
 export const layoutAtom = atom((get) => get(historyAtom).present.layout);
 export const canUndoAtom = atom((get) => get(historyAtom).past.length > 0);
 export const canRedoAtom = atom((get) => get(historyAtom).future.length > 0);
 
-export const selectedTypeAtom = atom<StitchType>('dc');
-export const statusAtom = atom<{ kind: 'ok' | 'busy' | 'error'; text: string }>({ kind: 'ok', text: 'Gotowy' });
-export const layoutStaleAtom = atom(false);
+export const toolAtom = atom<Tool>('vertex');
+export const selectedTypeAtom = atom<StitchType>('ch');
+export const statusAtom = atom<{ kind: 'ok' | 'busy' | 'error'; text: string }>({
+  kind: 'ok',
+  text: 'Kliknij w puste miejsce, aby dodać pierwszy wierzchołek.',
+});
 export const dirtyAtom = atom(false);
 
 const push = (h: History, next: Snapshot): History => ({
   past: [...h.past, h.present], present: next, future: [],
 });
 
-export const addStitchAtom = atom(null, (get, set, targetId?: string) => {
+export const addVertexAtom = atom(null, (get, set, pos: { x: number; y: number }) => {
   const h = get(historyAtom);
-  const r = addStitch(h.present.pattern, get(selectedTypeAtom), targetId);
+  const r = addVertex(h.present.pattern, get(selectedTypeAtom));
   if (!r.ok) return void set(statusAtom, { kind: 'error', text: r.error });
-  const layout = placeNewStitches(r.value, h.present.layout, [r.value.cursor!]);
+  const id = r.value.cursor;
+  if (!id) return;
+  const layout = withPlacement(h.present.layout, id, pos);
   set(historyAtom, push(h, { pattern: r.value, layout }));
-  set(layoutStaleAtom, true);
   set(dirtyAtom, true);
-  set(statusAtom, { kind: 'ok', text: 'Dodano oczko' });
+  set(statusAtom, { kind: 'ok', text: 'Dodano wierzchołek i krawędź previous.' });
+});
+
+export const addEdgeAtom = atom(null, (get, set, a: { from: string; to: string }) => {
+  const tool = get(toolAtom);
+  if (tool === 'vertex') return;
+  const h = get(historyAtom);
+  const r = addEdge(h.present.pattern, tool, a.from, a.to);
+  if (!r.ok) return void set(statusAtom, { kind: 'error', text: r.error });
+  set(historyAtom, push(h, { pattern: r.value, layout: h.present.layout }));
+  set(dirtyAtom, true);
+  set(statusAtom, {
+    kind: 'ok',
+    text: tool === 'slip-stitch' ? 'Slip stitch – bieżący wierzchołek zmieniony.' : 'Dodano krawędź insert.',
+  });
+});
+
+// Przeciąganie wierzchołka: jedna pozycja w historii na cały gest.
+let dragBase: Snapshot | null = null;
+
+export const moveNodeAtom = atom(null, (get, set, a: { id: string; x: number; y: number }) => {
+  const h = get(historyAtom);
+  if (!dragBase) dragBase = h.present;
+  set(historyAtom, {
+    ...h,
+    present: { ...h.present, layout: withPlacement(h.present.layout, a.id, a) },
+  });
+});
+
+export const endMoveAtom = atom(null, (get, set) => {
+  if (!dragBase) return;
+  const base = dragBase;
+  dragBase = null;
+  const h = get(historyAtom);
+  set(historyAtom, { past: [...h.past, base], present: h.present, future: [] });
+  set(dirtyAtom, true);
 });
 
 const mutate = (fn: (p: Pattern) => Result<Pattern>) =>
@@ -44,29 +88,27 @@ const mutate = (fn: (p: Pattern) => Result<Pattern>) =>
     const h = get(historyAtom);
     const r = fn(h.present.pattern);
     if (!r.ok) return void set(statusAtom, { kind: 'error', text: r.error });
-    set(historyAtom, push(h, { pattern: r.value, layout: rebuildLayout(r.value) }));
-    set(layoutStaleAtom, true);
+    set(historyAtom, push(h, { pattern: r.value, layout: h.present.layout }));
     set(dirtyAtom, true);
-    set(statusAtom, { kind: 'ok', text: 'Gotowy' });
+    set(statusAtom, { kind: 'ok', text: 'Gotowe.' });
   });
 
 export const removeLastAtom = mutate(removeLastStitch);
 export const newLayerAtom = mutate(startNewLayer);
 
-export const startPatternAtom = atom(null, (get, set, start: StartElement) => {
-  const pattern = createNewPattern(start);
-  set(historyAtom, push(get(historyAtom), { pattern, layout: rebuildLayout(pattern) }));
-  set(layoutStaleAtom, false);
+export const newPatternAtom = atom(null, (get, set) => {
+  set(historyAtom, push(get(historyAtom), { pattern: emptyPattern(), layout: emptyLayout() }));
   set(dirtyAtom, false);
-  set(statusAtom, { kind: 'ok', text: 'Nowy wzór' });
+  set(statusAtom, { kind: 'ok', text: 'Nowy wzór.' });
 });
 
 export const loadProjectAtom = atom(null, (get, set, text: string) => {
   const r = parseProject(text);
   if (!r.ok) return void set(statusAtom, { kind: 'error', text: r.error });
-  set(historyAtom, push(get(historyAtom), { pattern: r.value, layout: rebuildLayout(r.value) }));
+  const { pattern, positions } = r.value;
+  set(historyAtom, push(get(historyAtom), { pattern, layout: layoutFromPositions(pattern, positions) }));
   set(dirtyAtom, false);
-  set(statusAtom, { kind: 'ok', text: 'Wczytano projekt' });
+  set(statusAtom, { kind: 'ok', text: 'Wczytano projekt.' });
 });
 
 export const undoAtom = atom(null, (get, set) => {
@@ -85,14 +127,16 @@ export const redoAtom = atom(null, (get, set) => {
   set(dirtyAtom, true);
 });
 
-/** Pełne przeliczenie na żądanie (docelowo: Web Worker + identyfikatory żądań). */
+/** Automatyczne rozmieszczenie na żądanie (docelowo: Web Worker + identyfikatory żądań). */
 export const recomputeLayoutAtom = atom(null, async (get, set) => {
   const h = get(historyAtom);
-  set(statusAtom, { kind: 'busy', text: 'Przeliczanie…' });
-  const res = await engine.computeLayout(h.present.pattern);
-  if (get(historyAtom).present !== h.present) return; // wzór zmieniony w trakcie – wynik nieaktualny
+  set(statusAtom, { kind: 'busy', text: 'Rozmieszczanie…' });
+  const res = await engine.computeLayout(h.present.pattern, { previous: h.present.layout });
+  if (get(historyAtom).present !== h.present) {
+    return void set(statusAtom, { kind: 'ok', text: 'Wzór zmieniono w trakcie – wynik odrzucono.' });
+  }
   if (!res.ok) return void set(statusAtom, { kind: 'error', text: res.error });
   set(historyAtom, push(h, { pattern: h.present.pattern, layout: res.layout }));
-  set(layoutStaleAtom, false);
-  set(statusAtom, { kind: 'ok', text: 'Układ przeliczony' });
+  set(dirtyAtom, true);
+  set(statusAtom, { kind: 'ok', text: 'Układ przeliczony.' });
 });

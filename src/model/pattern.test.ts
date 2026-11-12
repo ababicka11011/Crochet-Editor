@@ -1,44 +1,64 @@
 import { describe, expect, it } from 'vitest';
-import { addStitch, createNewPattern, removeLastStitch, startNewLayer } from './pattern';
+import type { Pattern } from '../contracts';
+import { addEdge, addVertex, emptyPattern, removeLastStitch, startNewLayer } from './pattern';
+
+function build(...types: Parameters<typeof addVertex>[1][]): Pattern {
+  let p = emptyPattern();
+  for (const t of types) {
+    const r = addVertex(p, t);
+    if (!r.ok) throw new Error(r.error);
+    p = r.value;
+  }
+  return p;
+}
 
 describe('model wzoru', () => {
-  const start = () => createNewPattern({ kind: 'chain', count: 3 });
+  it('pierwszy wierzchołek musi być ch lub mr', () => {
+    expect(addVertex(emptyPattern(), 'dc').ok).toBe(false);
+    expect(addVertex(emptyPattern(), 'mr').ok).toBe(true);
+  });
 
-  it('tworzy łańcuszek startowy z kursorem na ostatnim oczku', () => {
-    const p = start();
-    expect(Object.keys(p.stitches)).toHaveLength(3);
+  it('nowy wierzchołek dostaje krawędź previous do bieżącego i staje się bieżącym', () => {
+    const p = build('ch', 'ch', 'sc');
     expect(p.cursor).toBe('s2');
-    expect(p.currentLayer).toBe(1);
+    expect(p.edges).toEqual([
+      { kind: 'previous', from: 's1', to: 's0' },
+      { kind: 'previous', from: 's2', to: 's1' },
+    ]);
   });
 
-  it('dodaje słupek wbity w wybrane oczko', () => {
-    const r = addStitch(start(), 'dc', 's0');
-    expect(r.ok).toBe(true);
-    if (r.ok) {
-      expect(r.value.cursor).toBe('s3');
-      expect(r.value.edges.some((e) => e.kind === 'insertion' && e.from === 's3' && e.to === 's0')).toBe(true);
-    }
+  it('insert nie zmienia bieżącego wierzchołka', () => {
+    const r = addEdge(build('ch', 'ch', 'sc'), 'insertion', 's2', 's0');
+    expect(r.ok && r.value.cursor).toBe('s2');
+    expect(r.ok && r.value.edges.some((e) => e.kind === 'insertion')).toBe(true);
   });
 
-  it('odrzuca wbicie bez celu lub w nieistniejący element', () => {
-    const p = start();
-    expect(addStitch(p, 'dc').ok).toBe(false);
-    expect(addStitch(p, 'dc', 'nope').ok).toBe(false);
+  it('insert: odrzuca ch jako źródło, przyszły cel i duplikat', () => {
+    const p = build('ch', 'ch', 'sc');
+    expect(addEdge(p, 'insertion', 's1', 's0').ok).toBe(false); // ch
+    expect(addEdge(p, 'insertion', 's0', 's2').ok).toBe(false);
+    const once = addEdge(p, 'insertion', 's2', 's0');
+    if (!once.ok) throw new Error('unexpected');
+    expect(addEdge(once.value, 'insertion', 's2', 's0').ok).toBe(false);
   });
 
-  it('usuwa ostatnie oczko i cofa kursor', () => {
-    const r = removeLastStitch(start());
+  it('slip stitch przenosi bieżący wierzchołek na cel, tylko z bieżącego', () => {
+    const p = build('ch', 'ch', 'ch');
+    expect(addEdge(p, 'slip-stitch', 's1', 's0').ok).toBe(false);
+    const r = addEdge(p, 'slip-stitch', 's2', 's0');
+    expect(r.ok && r.value.cursor).toBe('s0');
+  });
+
+  it('usuwa najnowszy wierzchołek z krawędziami', () => {
+    const r = removeLastStitch(build('ch', 'ch', 'sc'));
     expect(r.ok && r.value.cursor).toBe('s1');
+    expect(r.ok && r.value.edges).toHaveLength(1);
   });
 
-  it('zmienia warstwę', () => {
-    const r = startNewLayer(start());
+  it('zmienia warstwę i nie mutuje poprzedniego wzoru', () => {
+    const p = build('ch');
+    const r = startNewLayer(p);
     expect(r.ok && r.value.currentLayer).toBe(2);
-  });
-
-  it('nie mutuje poprzedniej wersji wzoru', () => {
-    const p = start();
-    addStitch(p, 'sc', 's0');
-    expect(Object.keys(p.stitches)).toHaveLength(3);
+    expect(p.currentLayer).toBe(1);
   });
 });

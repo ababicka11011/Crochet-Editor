@@ -1,7 +1,9 @@
-// Typy i interfejsy współdzielone przez moduły (bez logiki). Por. Stage 2, pkt 2.1.
+// Typy i interfejsy współdzielone przez moduły (bez logiki).
+// Model wzoru wzorowany na: Seitz i in., "Digital Crochet" (Onward! 2022).
 
 export type StitchId = string;
-export type StitchType = 'ch' | 'slst' | 'sc' | 'hdc' | 'dc' | 'tr' | 'mr';
+/** Węzły = punkty wbicia. Oczko ścisłe (slip stitch) NIE jest węzłem, tylko krawędzią. */
+export type StitchType = 'ch' | 'sc' | 'hdc' | 'dc' | 'tr' | 'mr';
 export type EdgeKind = 'previous' | 'insertion' | 'slip-stitch' | 'surrounding';
 export type Insertion = 'both-loops' | 'front-loop' | 'back-loop' | 'arch';
 
@@ -12,7 +14,7 @@ export interface Stitch {
   order: number;
 }
 
-/** Krawędź skierowana od węzła nowszego do starszego. */
+/** Krawędź skierowana od węzła nowszego do starszego (slip stitch: od bieżącego do celu). */
 export interface Edge {
   kind: EdgeKind;
   from: StitchId;
@@ -23,22 +25,20 @@ export interface Edge {
 export interface Pattern {
   stitches: Record<StitchId, Stitch>;
   edges: readonly Edge[];
-  cursor: StitchId | null;
+  cursor: StitchId | null; // bieżący wierzchołek (skąd wychodzi nić)
   currentLayer: number;
   nextOrder: number;
 }
 
 export type Result<T> = { ok: true; value: T } | { ok: false; error: string };
 
-export type StartElement = { kind: 'chain'; count: number } | { kind: 'magic-ring' };
-
 // ---- Layout ----
 export interface StitchPlacement {
-  x: number; // środek symbolu, jednostki modelu
+  x: number;
   y: number; // oś Y w dół (jak w SVG)
-  rotation: number; // radiany; 0 = podstawa symbolu na dole
-  sw: number; // skala szerokości
-  sh: number; // skala wysokości
+  rotation: number; // radiany (w surowym edytorze zawsze 0)
+  sw: number;
+  sh: number;
 }
 
 export interface Layout {
@@ -48,6 +48,8 @@ export interface Layout {
 
 export interface LayoutOptions {
   seed?: number;
+  /** Dotychczasowy układ – punkt startowy dla algorytmu (pozycje ustawione ręcznie). */
+  previous?: Layout;
 }
 export type LayoutDiagnostics = Record<string, number>;
 
@@ -55,7 +57,7 @@ export type LayoutResult =
   | { ok: true; layout: Layout; diagnostics: LayoutDiagnostics }
   | { ok: false; error: string };
 
-/** Kontrakt modułu algorytmicznego – implementuje go współautor (force-directed). */
+/** Kontrakt modułu algorytmicznego. */
 export interface LayoutEngine {
   computeLayout(p: Pattern, options?: LayoutOptions): Promise<LayoutResult>;
 }
