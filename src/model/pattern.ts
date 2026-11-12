@@ -52,7 +52,7 @@ export function addEdge(
   }
   if (kind === 'insertion') {
     if (!CATALOG[a.type].canInsert) {
-      return err(`${CATALOG[a.type].label} nie jest wbijane w inne punkty.`);
+      return err(`${CATALOG[a.type].label} nie jest wbijany w inne punkty.`);
     }
     if (b.order > a.order) {
       return err('Można wbić tylko w punkt utworzony wcześniej (wzór musi dać się wyszydełkować).');
