@@ -34,7 +34,7 @@ export function serializeProject(p: Pattern, layout: Layout, title = 'Bez tytuł
   );
 }
 
-/** Nigdy nie rzuca – niepoprawny plik daje komunikat błędu (NFR-R2). */
+/** Nigdy nie rzuca - niepoprawny plik daje komunikat błędu (NFR-R2). */
 export function parseProject(text: string): Result<LoadedProject> {
   try {
     const d = JSON.parse(text);

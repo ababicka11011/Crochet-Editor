@@ -2,7 +2,7 @@
 // Model wzoru wzorowany na: Seitz i in., "Digital Crochet" (Onward! 2022).
 
 export type StitchId = string;
-/** Węzły = punkty wbicia. Oczko ścisłe (slip stitch) NIE jest węzłem, tylko krawędzią. */
+/** Węzły = punkty wbicia. Oczko ścisłe (slip stitch) nie jest węzłem, tylko krawędzią. */
 export type StitchType = 'ch' | 'sc' | 'hdc' | 'dc' | 'tr' | 'mr';
 export type EdgeKind = 'previous' | 'insertion' | 'slip-stitch' | 'surrounding';
 export type Insertion = 'both-loops' | 'front-loop' | 'back-loop' | 'arch';
@@ -32,7 +32,7 @@ export interface Pattern {
 
 export type Result<T> = { ok: true; value: T } | { ok: false; error: string };
 
-// ---- Layout ----
+// --- Layout ---
 export interface StitchPlacement {
   x: number;
   y: number; // oś Y w dół (jak w SVG)
@@ -48,7 +48,7 @@ export interface Layout {
 
 export interface LayoutOptions {
   seed?: number;
-  /** Dotychczasowy układ – punkt startowy dla algorytmu (pozycje ustawione ręcznie). */
+  /** Dotychczasowy układ - punkt startowy dla algorytmu (pozycje ustawione ręcznie). */
   previous?: Layout;
 }
 export type LayoutDiagnostics = Record<string, number>;

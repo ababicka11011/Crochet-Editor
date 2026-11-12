@@ -4,9 +4,9 @@ import type { Tool } from '../controller/store';
 import { CATALOG, PALETTE_TYPES } from '../model/stitchCatalog';
 
 const TOOLS: { id: Tool; label: string; hint: string }[] = [
-  { id: 'vertex', label: 'Wierzchołki', hint: 'Kliknij puste miejsce, aby dodać wierzchołek (z krawędzią previous do bieżącego). Przeciągnij wierzchołek, aby go przesunąć.' },
-  { id: 'insertion', label: 'Krawędź: insert', hint: 'Przeciągnij od oczka do punktu, w który jest wbite (albo kliknij oba po kolei). Bieżący wierzchołek się nie zmienia.' },
-  { id: 'slip-stitch', label: 'Krawędź: slip stitch', hint: 'Zacznij od bieżącego wierzchołka (pierścień) i wskaż cel. Cel staje się bieżącym wierzchołkiem.' },
+  { id: 'vertex', label: 'Wierzchołki', hint: 'Kliknij puste miejsce, aby dodać wierzchołek (z krawędzią previous do bieżącego).' },
+  { id: 'insertion', label: 'Krawędź: insert', hint: 'Przeciągnij od oczka do punktu, w który jest wbite. Bieżący wierzchołek się nie zmienia.' },
+  { id: 'slip-stitch', label: 'Krawędź: slip stitch', hint: 'Zacznij od bieżącego wierzchołka i wskaż cel. Cel staje się bieżącym wierzchołkiem.' },
 ];
 
 export function Palette() {
@@ -48,7 +48,7 @@ export function Palette() {
       </ul>
 
       <dl className="facts">
-        <dt>Bieżący</dt><dd>{cursor ? `${cursor.type} #${cursor.order + 1}` : '–'}</dd>
+        <dt>Bieżący</dt><dd>{cursor ? `${cursor.type} #${cursor.order + 1}` : '-'}</dd>
         <dt>Warstwa</dt><dd>{pattern.currentLayer}</dd>
         <dt>Wierzchołków</dt><dd>{Object.keys(pattern.stitches).length}</dd>
         <dt>Krawędzi</dt><dd>{pattern.edges.length}</dd>

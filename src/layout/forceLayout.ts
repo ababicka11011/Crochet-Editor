@@ -49,8 +49,8 @@ export function layoutFromPositions(
 /** Prosty, deterministyczny układ siłowy: sprężyny na krawędziach + odpychanie wierzchołków. */
 export function forceLayout(p: Pattern, prev?: Layout, iterations = 300): Layout {
   const L = 50;
-  const REPULSION = 2800;
-  const SPRING = 0.08;
+  const REPULSION = 3000;
+  const SPRING = 0.10;
   const ordered = Object.values(p.stitches).sort((a, b) => a.order - b.order);
   const nodes = ordered.map((s, i) => {
     const q = prev?.placements[s.id];
