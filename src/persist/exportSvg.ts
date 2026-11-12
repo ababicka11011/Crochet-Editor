@@ -3,7 +3,7 @@ import { edgeOffsets, edgePath, NODE_RADIUS } from '../layout/edgeGeometry';
 import { computeBounds } from '../layout/forceLayout';
 import { layerColor } from '../model/stitchCatalog';
 
-const EDGE_COLOR = { previous: '#5d6879', insertion: '#3b4fb8', 'slip-stitch': '#d4701a', surrounding: '#888888' };
+const EDGE_COLOR = { previous: '#777777', insertion: '#3b4fb8', 'slip-stitch': '#d4701a', surrounding: '#888888' };
 
 /** Eksport całego grafu, niezależny od widoku; bez elementów UI (US-10). */
 export function exportSvg(p: Pattern, layout: Layout): string {
