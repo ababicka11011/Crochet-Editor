@@ -1,4 +1,5 @@
 import { atom } from 'jotai';
+import type { Getter, Setter } from 'jotai';
 import type { Layout, Pattern, Result, StitchType } from '../contracts';
 import {
   ForceLayoutEngine, emptyLayout, layoutFromPositions, withPlacement,
@@ -31,9 +32,29 @@ export const statusAtom = atom<{ kind: 'ok' | 'busy' | 'error'; text: string }>(
   text: 'Kliknij w puste miejsce, aby dodać pierwszy wierzchołek.',
 });
 export const dirtyAtom = atom(false);
+export const autoLayoutAtom = atom(false);
 
 const push = (h: History, next: Snapshot): History => ({
   past: [...h.past, h.present], present: next, future: [],
+});
+
+/** Przelicza układ bieżącego stanu bez nowego wpisu w historii. */
+const relayoutAtom = atom(null, async (get, set) => {
+  const h = get(historyAtom);
+  const res = await engine.computeLayout(h.present.pattern, { previous: h.present.layout });
+  const now = get(historyAtom);
+  if (now.present !== h.present) return; // w międzyczasie kolejna akcja ma własne przeliczenie
+  if (!res.ok) return void set(statusAtom, { kind: 'error', text: res.error });
+  set(historyAtom, { ...now, present: { pattern: now.present.pattern, layout: res.layout } });
+});
+
+function maybeRelayout(get: Getter, set: Setter) {
+  if (get(autoLayoutAtom)) void set(relayoutAtom);
+}
+
+export const setAutoLayoutAtom = atom(null, (get, set, on: boolean) => {
+  set(autoLayoutAtom, on);
+  maybeRelayout(get, set);
 });
 
 export const addVertexAtom = atom(null, (get, set, pos: { x: number; y: number }) => {
@@ -46,6 +67,7 @@ export const addVertexAtom = atom(null, (get, set, pos: { x: number; y: number }
   set(historyAtom, push(h, { pattern: r.value, layout }));
   set(dirtyAtom, true);
   set(statusAtom, { kind: 'ok', text: 'Dodano wierzchołek i krawędź previous.' });
+  maybeRelayout(get, set);
 });
 
 export const addEdgeAtom = atom(null, (get, set, a: { from: string; to: string }) => {
@@ -58,11 +80,12 @@ export const addEdgeAtom = atom(null, (get, set, a: { from: string; to: string }
   set(dirtyAtom, true);
   set(statusAtom, {
     kind: 'ok',
-    text: tool === 'slip-stitch' ? 'Slip stitch - bieżący wierzchołek zmieniony.' : 'Dodano krawędź insert.',
+    text: tool === 'slip-stitch' ? 'Slip stitch – bieżący wierzchołek zmieniony.' : 'Dodano krawędź insert.',
   });
+  maybeRelayout(get, set);
 });
 
-// Przeciąganie wierzchołka: jedna pozycja w historii na cały gest.
+// Przeciąganie wierzchołka: jedna pozycja w historii na cały gest (bez przeliczania).
 let dragBase: Snapshot | null = null;
 
 export const moveNodeAtom = atom(null, (get, set, a: { id: string; x: number; y: number }) => {
@@ -91,6 +114,7 @@ const mutate = (fn: (p: Pattern) => Result<Pattern>) =>
     set(historyAtom, push(h, { pattern: r.value, layout: h.present.layout }));
     set(dirtyAtom, true);
     set(statusAtom, { kind: 'ok', text: 'Gotowe.' });
+    maybeRelayout(get, set);
   });
 
 export const removeLastAtom = mutate(removeLastStitch);
@@ -127,13 +151,13 @@ export const redoAtom = atom(null, (get, set) => {
   set(dirtyAtom, true);
 });
 
-/** Automatyczne rozmieszczenie na żądanie (docelowo: Web Worker + identyfikatory żądań). */
+/** Ręczne rozmieszczenie na żądanie – osobny wpis w historii. */
 export const recomputeLayoutAtom = atom(null, async (get, set) => {
   const h = get(historyAtom);
   set(statusAtom, { kind: 'busy', text: 'Rozmieszczanie…' });
   const res = await engine.computeLayout(h.present.pattern, { previous: h.present.layout });
   if (get(historyAtom).present !== h.present) {
-    return void set(statusAtom, { kind: 'ok', text: 'Wzór zmieniono w trakcie - wynik odrzucono.' });
+    return void set(statusAtom, { kind: 'ok', text: 'Wzór zmieniono w trakcie – wynik odrzucono.' });
   }
   if (!res.ok) return void set(statusAtom, { kind: 'error', text: res.error });
   set(historyAtom, push(h, { pattern: h.present.pattern, layout: res.layout }));

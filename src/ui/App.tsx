@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { useAtomValue, useSetAtom } from 'jotai';
 import {
-  canRedoAtom, canUndoAtom, dirtyAtom, layoutAtom, loadProjectAtom, newLayerAtom,
-  newPatternAtom, patternAtom, recomputeLayoutAtom, redoAtom, removeLastAtom, statusAtom, undoAtom,
+  autoLayoutAtom, canRedoAtom, canUndoAtom, dirtyAtom, layoutAtom, loadProjectAtom, newLayerAtom,
+  newPatternAtom, patternAtom, recomputeLayoutAtom, redoAtom, removeLastAtom, setAutoLayoutAtom,
+  statusAtom, undoAtom,
 } from '../controller/store';
 import { exportSvg } from '../persist/exportSvg';
 import { download, serializeProject } from '../persist/projectFile';
@@ -25,6 +26,8 @@ export function App() {
   const load = useSetAtom(loadProjectAtom);
   const setDirty = useSetAtom(dirtyAtom);
   const fileInput = useRef<HTMLInputElement>(null);
+  const auto = useAtomValue(autoLayoutAtom);
+  const setAuto = useSetAtom(setAutoLayoutAtom);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -60,6 +63,10 @@ export function App() {
         <button onClick={() => newLayer()}>Nowa warstwa</button>
         <span className="sep" />
         <button onClick={() => recompute()}>Rozmieść automatycznie</button>
+        <label className="check">
+          <input type="checkbox" checked={auto} onChange={(e) => setAuto(e.target.checked)} />
+          Przeliczaj po każdej zmianie
+        </label>
         <input
           ref={fileInput} type="file" accept=".json" hidden
           onChange={async (e) => {

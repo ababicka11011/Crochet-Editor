@@ -73,3 +73,5 @@ main { position: relative; overflow: hidden; background: #fff; }
 .status { grid-column: 1 / -1; padding: 6px 12px; background: var(--panel);
   border-top: 1px solid var(--line); color: var(--muted); }
 .status.error { color: var(--danger); }
+
+.check { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }

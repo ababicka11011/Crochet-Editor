@@ -50,6 +50,8 @@ export interface LayoutOptions {
   seed?: number;
   /** Dotychczasowy układ - punkt startowy dla algorytmu (pozycje ustawione ręcznie). */
   previous?: Layout;
+  /** Przeliczenie po drobnej zmianie: zachować dotychczasowy układ, tylko go doprasować. */
+  incremental?: boolean;
 }
 export type LayoutDiagnostics = Record<string, number>;
 
