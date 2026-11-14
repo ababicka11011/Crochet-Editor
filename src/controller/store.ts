@@ -80,7 +80,7 @@ export const addEdgeAtom = atom(null, (get, set, a: { from: string; to: string }
   set(dirtyAtom, true);
   set(statusAtom, {
     kind: 'ok',
-    text: tool === 'slip-stitch' ? 'Slip stitch – bieżący wierzchołek zmieniony.' : 'Dodano krawędź insert.',
+    text: tool === 'slip-stitch' ? 'Slip stitch - bieżący wierzchołek zmieniony.' : 'Dodano krawędź insert.',
   });
   maybeRelayout(get, set);
 });
@@ -151,13 +151,13 @@ export const redoAtom = atom(null, (get, set) => {
   set(dirtyAtom, true);
 });
 
-/** Ręczne rozmieszczenie na żądanie – osobny wpis w historii. */
+/** Ręczne rozmieszczenie na żądanie - osobny wpis w historii. */
 export const recomputeLayoutAtom = atom(null, async (get, set) => {
   const h = get(historyAtom);
   set(statusAtom, { kind: 'busy', text: 'Rozmieszczanie…' });
   const res = await engine.computeLayout(h.present.pattern, { previous: h.present.layout });
   if (get(historyAtom).present !== h.present) {
-    return void set(statusAtom, { kind: 'ok', text: 'Wzór zmieniono w trakcie – wynik odrzucono.' });
+    return void set(statusAtom, { kind: 'ok', text: 'Wzór zmieniono w trakcie - wynik odrzucono.' });
   }
   if (!res.ok) return void set(statusAtom, { kind: 'error', text: res.error });
   set(historyAtom, push(h, { pattern: h.present.pattern, layout: res.layout }));
