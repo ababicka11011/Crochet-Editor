@@ -15,14 +15,8 @@ export function startNewPattern(method: 'ch' | 'mr'): Pattern {
     id: 'stitch-0',
     type: method,
     layer: 0,
-    previous: null,
     surroundingNodes: null
   };
-
-  // const layout: Layout = { 
-  //   placements: { [initialStitch.id]: {x: 700, y: 320, rotation: 0, sw: 1, sh: 1} },
-  //   bounds: { minX: 0, minY: 0, maxX: 1000, maxY: 1000}
-  // }
 
   // Return the initial pattern object with the first stitch and no edges
   return {
@@ -47,7 +41,12 @@ export function addStitch(pattern: Pattern, type: StitchType,
     return { ok: false, error: 'Chain stitches cannot be inserted into other stitches' };
   }
 
-  // 2. Validate all insertion targets exist
+  // 2. Validate the cursor exists
+  if (!pattern.cursor || !pattern.stitches[pattern.cursor]) {
+    return { ok: false, error: 'Current stitch does not exist' };
+  }
+
+  // 3. Validate all insertion targets exist
   const targets = insertInto === undefined ? []
     : Array.isArray(insertInto) ? insertInto : [insertInto];
 
@@ -62,12 +61,11 @@ export function addStitch(pattern: Pattern, type: StitchType,
     id: `stitch-${pattern.nextOrder}`,
     type,
     layer: pattern.currentLayer,
-    previous: pattern.cursor,
     surroundingNodes: null, // add hole support later
   };
 
   // previousEdge is not needed since we already have previous in the stitch object, but we can keep it for calculating position.
-  const previousEdge: Edge = { kind: 'previous', from: newStitch.id, to: pattern.cursor || '' };
+  const previousEdge: Edge = { kind: 'previous', from: newStitch.id, to: pattern.cursor };
   
   // Create the new pattern object by adding the new stitch and edge to the existing pattern.
   const newPattern: Pattern = { ...pattern, 
@@ -99,10 +97,11 @@ export function removeLastStitch(pattern: Pattern): Result<Pattern> {
   identifies the previous stitch, and updates the pattern accordingly.
   Returns a Result object containing either the updated pattern or an error message.
   */
+
   // Check if there are any stitches to remove
   const stitchIds = Object.keys(pattern.stitches);
-  if (stitchIds.length === 0) {
-    return { ok: false, error: "No stitches to remove" };
+  if (stitchIds.length <= 1) {
+    return { ok: false, error: "No stitches to remove" }; // Prevent removing the initial stitch
   }
 
   const lastSlipStitchEdge = pattern.edges.findLast(
@@ -122,6 +121,7 @@ export function removeLastStitch(pattern: Pattern): Result<Pattern> {
     edge => edge.kind === 'previous' && edge.from === pattern.cursor
   );
   const previousStitchId = previousEdge ? previousEdge.to : null;
+  if (!previousStitchId) return { ok: false, error: "No previous stitch found" };
   
   // Create a new stitches object without the last stitch and filter out edges related to the last stitch
   const newStitches = { ...pattern.stitches };
@@ -140,10 +140,14 @@ export function changeStitchType(pattern: Pattern, id: StitchId, newType: Stitch
   updates its type, and returns the updated pattern.
   Returns a Result object containing either the updated pattern or an error message.
   */
+
   // Check if the specified stitch exists in the pattern
   if (!pattern.stitches[id]) {
     return { ok: false, error: `Stitch with id ${id} does not exist` };
   }
+
+  //TODO: Validate that the new type is compatible with the existing edges and surrounding nodes
+  
 
   // Create a new stitch object with the updated type and construct the new pattern object with the modified stitches.
   const updatedStitch: Stitch = { ...pattern.stitches[id], type: newType };

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Pattern } from '../../contracts/Pattern';
 import type { Result } from '../Result';
+import { previousOf } from '../graph-queries';
 import {
   addSlipStitch,
   addStitch,
@@ -24,11 +25,12 @@ function chainOf(count: number): Pattern {
 }
 
 describe('addStitch', () => {
-  it('links each new stitch to the previous one with a previous edge pointing old -> new', () => {
+  it('links each new stitch to the previous one with a previous edge pointing new -> old', () => {
     const pattern = chainOf(3);
 
     expect(pattern.cursor).toBe('stitch-2');
-    expect(pattern.stitches['stitch-2'].previous).toBe('stitch-1');
+
+    expect(previousOf(pattern, 'stitch-2')).toBe('stitch-1');
     expect(pattern.edges).toEqual([
       { kind: 'previous', from: 'stitch-1', to: 'stitch-0' },
       { kind: 'previous', from: 'stitch-2', to: 'stitch-1' },
@@ -131,7 +133,6 @@ describe('removeLastStitch', () => {
     expect(JSON.stringify(base)).toBe(snapshot);
   });
 
-  // test for removing a slip stitch and its effect on the cursor and edges
   it('removes a slip stitch and moves the cursor back to the stitch it was slipped into', () => {
     const base = chainOf(5);
     const withSlip = unwrap(addSlipStitch(base, 'stitch-1'));

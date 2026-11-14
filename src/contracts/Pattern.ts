@@ -4,7 +4,7 @@ import type { Edge } from "../model/Edge";
 export interface Pattern {
   stitches: Record<StitchId, Stitch>
   edges: Edge[]
-  cursor: StitchId | null;
+  cursor: StitchId;
   currentLayer: number;
   nextOrder: number;
 }

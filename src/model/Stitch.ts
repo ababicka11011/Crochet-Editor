@@ -5,6 +5,5 @@ export interface Stitch {
   id: StitchId
   type: StitchType
   layer: number
-  previous: StitchId | null
   surroundingNodes: StitchId[] | null
 }
