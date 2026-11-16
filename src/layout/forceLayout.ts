@@ -1,6 +1,7 @@
 import type {
-  Layout, LayoutEngine, LayoutOptions, LayoutResult, Pattern, StitchId, StitchPlacement,
-} from '../contracts';
+  Pattern, StitchId,
+} from '../model';
+import type { StitchPlacement, Layout, LayoutEngine, LayoutOptions, LayoutResult } from '../contracts/Layout.ts'
 
 export function computeBounds(pl: Readonly<Record<StitchId, StitchPlacement>>): Layout['bounds'] {
   const all = Object.values(pl);

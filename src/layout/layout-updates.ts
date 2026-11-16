@@ -1,9 +1,9 @@
 import type { Layout, LayoutResult, StitchPlacement } from '../contracts/Layout';
-import type { Pattern } from '../contracts/Pattern';
-import type { StitchId } from '../model/Stitch';
+import type { Pattern } from '../model';
+import type { StitchId } from '../model';
 import { previousOf, parentsOf, siblingsOf } from '../model/graph-queries';
 import { add, normalize, rotationFromDirection, rotationFromUp, scale, sub, upFromRotation, type Vec } from './geometry/Vec';
-import { stitchGeometryMap } from './geometry/StitchGeometry';
+import { stitchGeometryMap } from '../model/stitchCatalog';
 
 function directionFromLastTwo(pattern: Pattern, layout: Layout): Vec | null {
   const lastId = pattern.cursor;

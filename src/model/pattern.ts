@@ -1,5 +1,6 @@
-import type { Edge, Pattern, Result, Stitch, StitchId, StitchType } from '../contracts';
-import { CATALOG } from './stitchCatalog';
+import type { Stitch, StitchId, StitchType, Edge, Pattern } from '../model';
+import type { Result } from '../contracts/Result.ts';
+import { CATALOG } from './stitchCatalog.ts';
 
 function ok<T>(value: T): Result<T> {
   return { ok: true, value };
@@ -62,7 +63,7 @@ export function addEdge(
   if (from !== p.cursor) {
     return err('Oczko ścisłe zaczyna się w bieżącym wierzchołku (zaznaczony pierścieniem).');
   }
-  return ok({ ...p, edges: [...p.edges, { kind, from, to }], cursor: to });
+  return ok({ ...p, edges: [...p.edges, { kind, from, to, layer: p.currentLayer }], cursor: to });
 }
 
 /** Usuwa najnowszy wierzchołek razem z jego krawędziami. */
@@ -70,6 +71,13 @@ export function removeLastStitch(p: Pattern): Result<Pattern> {
   const all = Object.values(p.stitches);
   const last = all.reduce<Stitch | null>((a, s) => (!a || s.order > a.order ? s : a), null);
   if (!last) return err('Wzór jest pusty.');
+  const lastSlipStitchEdge = p.edges.findLast(edge => edge.kind === 'slip-stitch' && edge.to === p.cursor);
+  if (lastSlipStitchEdge) {
+    // jeśli ostatnio dodana krawędź to oczko ścisłe, usuń odpowiadającą mu krawędź i cofnij kursor do miejsca, z którego wychodziła krawędź
+    const newEdges = p.edges.filter(edge => edge !== lastSlipStitchEdge);
+    const newPattern: Pattern = { ...p, edges: newEdges, cursor: lastSlipStitchEdge.from, currentLayer: p.currentLayer - 1 };
+    return { ok: true, value: newPattern };
+  }
   const prev = p.edges.find((e) => e.kind === 'previous' && e.from === last.id)?.to ?? null;
   const stitches = { ...p.stitches };
   delete stitches[last.id];

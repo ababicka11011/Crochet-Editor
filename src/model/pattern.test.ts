@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Pattern } from '../contracts';
+import type { Pattern } from '../model';
 import { addEdge, addVertex, emptyPattern, removeLastStitch, startNewLayer } from './pattern';
 
 function build(...types: Parameters<typeof addVertex>[1][]): Pattern {
@@ -16,6 +16,7 @@ describe('model wzoru', () => {
   it('pierwszy wierzchołek musi być ch lub mr', () => {
     expect(addVertex(emptyPattern(), 'dc').ok).toBe(false);
     expect(addVertex(emptyPattern(), 'mr').ok).toBe(true);
+    expect(addVertex(emptyPattern(), 'ch').ok).toBe(true);
   });
 
   it('nowy wierzchołek dostaje krawędź previous do bieżącego i staje się bieżącym', () => {

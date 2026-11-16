@@ -1,38 +1,39 @@
-import type { StitchId } from "../model/Stitch";
+import type { StitchId, Pattern } from "../model";
 
 export interface StitchPlacement {
   x: number;        // środek symbolu, jednostki modelu
-  y: number;
-  rotation: number; // radiany; 0 = symbol pionowo, podstawa na dole
+  y: number;        // oś Y w dół (jak w SVG)
+  rotation: number; // radiany; 0 = symbol pionowo, podstawa na dole (w surowym edytorze zawsze 0)
   sw: number;       // skala szerokości: W = W0 * sw
   sh: number;       // skala wysokości:  H = H0 * sh
 }
 
 export interface Layout {
-//   patternId: string;
   placements: Record<StitchId, StitchPlacement>;
   bounds: { minX: number; minY: number; maxX: number; maxY: number };
 }
 
-// will probably change, for now it has only some values so as not to leave empty interface
 export interface LayoutOptions {
-    // for options to configure layout algorithm, e.g. seed, maxIterations, timeBudgetMs,
-    // pinned list, abort signal to allow stopping computations
-    seed: number,
-    timeBudgetMs: number
+    // opcje algorytmu layoutu, np. seed, maxIterations, timeBudgetMs,
+    // lista oczek o stałej pozycji, sygnał przerwania obliczeń
+    seed?: number,
+    /** Dotychczasowy układ - punkt startowy dla algorytmu (pozycje ustawione ręcznie). */
+    previous?: Layout; 
+    timeBudgetMs?: number
 }
+//   type LayoutResult =
+//   | { ok: true; layout: Layout; diagnostics: LayoutDiagnostics }
+//   | { ok: false; error: { code: LayoutErrorCode; message: string } };
+
+// pozwala na zapisanie wartości różnych metryk związanych z jakością layoutu, np. procent kolizji,
+// liczba zdeformowanych oczek, itp.
+export type LayoutDiagnostics = Record<string, number>;
 
 export type LayoutResult =
   | { ok: true; layout: Layout; diagnostics?: LayoutDiagnostics }
   | { ok: false; error: string };
 
-//   type LayoutResult =
-//   | { ok: true; layout: Layout; diagnostics: LayoutDiagnostics }
-//   | { ok: false; error: { code: LayoutErrorCode; message: string } };
-
-// will probably change, for now it has only some values so as not to leave empty interface
-export interface LayoutDiagnostics {
-    // for results of various metrics regarding layout quality, e.g. percent of collisions, 
-    // number of deformed stitches
-    deformed_stitches: number
+/** Kontrakt modułu algorytmicznego. */
+export interface LayoutEngine {
+  computeLayout(pattern: Pattern, options?: LayoutOptions): Promise<LayoutResult>;
 }

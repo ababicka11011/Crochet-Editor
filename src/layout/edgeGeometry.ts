@@ -1,4 +1,4 @@
-import type { Edge } from '../contracts';
+import type { Edge } from '../model';
 
 export const NODE_RADIUS = 14;
 

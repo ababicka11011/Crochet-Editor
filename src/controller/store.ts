@@ -1,6 +1,8 @@
 import { atom } from 'jotai';
 import type { Getter, Setter } from 'jotai';
-import type { Layout, Pattern, Result, StitchType } from '../contracts';
+import type { Layout } from '../contracts/Layout.ts';
+import type { Pattern, StitchType } from '../model';
+import type { Result } from '../contracts/Result.ts';
 import {
   ForceLayoutEngine, emptyLayout, layoutFromPositions, withPlacement,
 } from '../layout/forceLayout';

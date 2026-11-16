@@ -1,7 +1,5 @@
-import type { Stitch, StitchType, StitchId } from '../Stitch';
-import type { Insertion, Edge } from '../Edge'
-import type { Pattern } from '../../contracts/Pattern';
-import type { Result } from '../Result';
+import type { Stitch, StitchType, StitchId, Pattern, Edge, Insertion } from '../../model';
+import type { Result } from '../../contracts/Result';
 
 export function startNewPattern(method: 'ch' | 'mr'): Pattern {
   /*
@@ -15,7 +13,7 @@ export function startNewPattern(method: 'ch' | 'mr'): Pattern {
     id: 'stitch-0',
     type: method,
     layer: 0,
-    surroundingNodes: null
+    order: 0,
   };
 
   // Return the initial pattern object with the first stitch and no edges
@@ -61,7 +59,7 @@ export function addStitch(pattern: Pattern, type: StitchType,
     id: `stitch-${pattern.nextOrder}`,
     type,
     layer: pattern.currentLayer,
-    surroundingNodes: null, // add hole support later
+    order: pattern.nextOrder
   };
 
   // previousEdge is not needed since we already have previous in the stitch object, but we can keep it for calculating position.

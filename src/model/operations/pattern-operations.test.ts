@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { Pattern } from '../../contracts/Pattern';
-import type { Result } from '../Result';
+import type { Pattern } from '../../model';
+import type { Result } from '../../contracts/Result';
 import { previousOf } from '../graph-queries';
 import {
   addSlipStitch,
