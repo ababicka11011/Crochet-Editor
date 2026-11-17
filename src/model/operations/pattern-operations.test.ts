@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Pattern } from '../../model';
 import type { Result } from '../../contracts/Result';
-import { previousOf } from '../graph-queries';
+import { previousOf } from '../patternQueries';
 import {
   addSlipStitch,
   addStitch,

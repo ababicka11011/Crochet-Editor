@@ -2,18 +2,18 @@ import type { EdgeKind, StitchType } from '../model';
 
 export interface StitchGeometry {
   type: StitchType;
-  width: number;      // szerokość symbolu w jednostkach modelu
-  height: number;     // wysokość symbolu w jednostkach modelu
+  baseWidth: number;      // szerokość symbolu w jednostkach modelu
+  baseHeight: number;     // wysokość symbolu w jednostkach modelu
   minRatio?: number;  // minimalne proporcje H/W symbolu
   maxRatio?: number;  // minimalne proporcje H/W symbolu
 }
 
-export const stitchGeometryMap: Record<StitchType, StitchGeometry | undefined> = {
-  ch: { type: 'ch', width: 1, height: 0 },
-  sc: { type: 'sc', width: 1, height: 1 },
-  hdc: { type: 'hdc', width: 1, height: 1.5 },
-  dc: { type: 'dc', width: 1, height: 2 },
-  tr: { type: 'tr', width: 1, height: 3 },
+export const STITCH_GEOMETRY: Record<StitchType, StitchGeometry | undefined> = {
+  ch: { type: 'ch', baseWidth: 1, baseHeight: 0 },
+  sc: { type: 'sc', baseWidth: 1, baseHeight: 1, minRatio: 0.8, maxRatio: 1.2 },
+  hdc: { type: 'hdc', baseWidth: 1, baseHeight: 1.5, minRatio: 1.2, maxRatio: 1.8 },
+  dc: { type: 'dc', baseWidth: 1, baseHeight: 2, minRatio: 1.6, maxRatio: 2.4 },
+  tr: { type: 'tr', baseWidth: 1, baseHeight: 3, minRatio: 2.5, maxRatio: 3.5 },
   mr: undefined,    // magiczne kółka nie mają określonej geometrii
   hole: undefined,  // otwory nie mają określonej geometrii
 };

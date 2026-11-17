@@ -1,9 +1,9 @@
 import type { Layout, LayoutResult, StitchPlacement } from '../contracts/Layout';
 import type { Pattern } from '../model';
 import type { StitchId } from '../model';
-import { previousOf, parentsOf, siblingsOf } from '../model/graph-queries';
+import { previousOf, parentsOf, siblingsOf } from '../model/patternQueries';
 import { add, normalize, rotationFromDirection, rotationFromUp, scale, sub, upFromRotation, type Vec } from './geometry/Vec';
-import { stitchGeometryMap } from '../model/stitchCatalog';
+import { STITCH_GEOMETRY } from '../model/stitchCatalog';
 
 function directionFromLastTwo(pattern: Pattern, layout: Layout): Vec | null {
   const lastId = pattern.cursor;
@@ -25,7 +25,7 @@ export function placeNewStitches(pattern: Pattern, layout: Layout, newIds: Stitc
     newIds.forEach((id) => {
         // add handling case where more than one parent
         const type = pattern.stitches[id]?.type;
-        const stitchGeometry = stitchGeometryMap[type];
+        const stitchGeometry = STITCH_GEOMETRY[type];
 
         if (!stitchGeometry) {
             return { ok: false, error: `No geometry for stitch type: ${type}` };
@@ -41,7 +41,7 @@ export function placeNewStitches(pattern: Pattern, layout: Layout, newIds: Stitc
                 const previousNodePlacement = layout.placements[previousOf(pattern, id)!];
                 const prevPos: Vec = {x: previousNodePlacement.x ?? 0, y: previousNodePlacement.y ?? 0};
 
-                const newPos_ch = add(prevPos, scale(d, stitchGeometry.height));
+                const newPos_ch = add(prevPos, scale(d, stitchGeometry.baseHeight));
                 // Place the new chain stitch in the direction of the last two stitches
                 newLayout.placements[id] = { x: newPos_ch.x, y: newPos_ch.y, rotation: rotationFromDirection(d), sh: 1, sw: 1 }; // Default placement for chain stitch
                 break;
@@ -82,7 +82,7 @@ export function placeNewStitches(pattern: Pattern, layout: Layout, newIds: Stitc
                 var n: Vec = upFromRotation(parentRotation);
 
                 // const stitchGeometry = stitchGeometryMap[type];
-                const newPos = add(parentPos, scale(n, stitchGeometry.height));
+                const newPos = add(parentPos, scale(n, stitchGeometry.baseHeight));
 
                 // if several stitches are sharing the same parent, adjust the position of the new stitch accordingly
                 const siblings = siblingsOf(pattern, id, parents[0]);

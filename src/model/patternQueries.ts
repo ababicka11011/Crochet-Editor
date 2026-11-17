@@ -1,5 +1,4 @@
-import type { Pattern } from '../contracts/Pattern';
-import type { StitchId } from '../model/Stitch';
+import type { StitchId, Stitch, Pattern } from '../model';
 
 export const previousOf = (pattern: Pattern, id: StitchId): StitchId | null =>
   pattern.edges.find(e => e.kind === 'previous' && e.from === id)?.to ?? null;
@@ -20,3 +19,11 @@ export const siblingsOf = (pattern: Pattern, id: StitchId, parent?: StitchId): S
         .filter(edge => edge.kind === 'insertion' && edge.to === parent && edge.from !== id)
         .map(edge => edge.from);
 };
+
+export function firstStitch(pattern: Pattern): Stitch | null {
+  let first: Stitch | null = null;
+  for (const s of Object.values(pattern.stitches)) {
+    if (!first || s.order < first.order) first = s;
+  }
+  return first;
+}

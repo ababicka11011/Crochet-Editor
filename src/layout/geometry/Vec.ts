@@ -10,9 +10,15 @@ export const tangentFromRotation = (θ: number): Vec => ({ x: Math.cos(θ), y: M
 export const rotationFromUp = (v: Vec): number => Math.atan2(v.x, -v.y);
 export const rotationFromDirection = (v: Vec): number => Math.atan2(v.y, v.x);
 
-const length = (v: Vec): number => Math.hypot(v.x, v.y);
+export const vecLength = (v: Vec): number => Math.hypot(v.x, v.y);
 
 export const normalize = (v: Vec): Vec | null => {
-  const len = length(v);
+  const len = vecLength(v);
   return len < 1e-9 ? null : { x: v.x / len, y: v.y / len };
 };
+
+export const clamp = (v: number, min: number, max: number): number =>
+  Math.min(max, Math.max(min, v));
+
+export const angleBetween = (a: Vec, b: Vec): number =>
+  Math.acos(clamp(dot(a, b), -1, 1));

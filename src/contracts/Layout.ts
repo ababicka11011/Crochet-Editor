@@ -2,7 +2,7 @@ import type { StitchId, Pattern } from "../model";
 
 export interface StitchPlacement {
   x: number;        // środek symbolu, jednostki modelu
-  y: number;        // oś Y w dół (jak w SVG)
+  y: number;        // "góra" symbolu, oś Y w dół (jak w SVG)
   rotation: number; // radiany; 0 = symbol pionowo, podstawa na dole (w surowym edytorze zawsze 0)
   sw: number;       // skala szerokości: W = W0 * sw
   sh: number;       // skala wysokości:  H = H0 * sh
