@@ -72,37 +72,3 @@ describe.each(engines)('$name', (engine) => {
     });
 })
 
-/**
- * Dla silnika szybkiego progi mogą być łagodniejsze niż dla dokładnego. Najprościej trzymać je w obiekcie przy definicji silnika.
-
-2. Porównania względne między silnikami
-silnik dokładny ma nie więcej kolizji niż szybki na każdym wzorze,
-silnik dokładny ma mniejszy lub równy shapeDeviation niż szybki,
-każdy silnik jest lepszy od układu startowego (np. placeNewStitches dla wszystkich oczek): przeliczenie nie może pogorszyć overlapRatio ani edgeLengthError.
-
-Ostatni test jest szczególnie przydatny: wychwytuje sytuację, w której zmiana w silniku sprawia, że „optymalizacja” psuje dobry układ.
-
-3. Własności, które muszą zawsze zachodzić
-determinizm: ten sam wzór i ten sam seed → identyczny układ (porównanie pozycji co do 1e-9),
-kompletność: każde oczko z wzoru ma pozycję w wyniku, brak NaN i Infinity,
-stabilność przy previous: przeliczenie układu, który już jest wynikiem silnika, przesuwa oczka średnio o mniej niż np. 0,1 szerokości oczka. Układ będący już minimum nie powinien „odpływać”,
-lokalność zmian: dodanie jednego oczka i przeliczenie z previous przesuwa pozostałe oczka średnio o mniej niż np. 0,5 szerokości oczka. To sprawdza wymaganie „symbole nie latają po ekranie”.
-4. Przypadki brzegowe
-pusty wzór → wynik ok: false albo pusty układ, bez wyjątku,
-jedno oczko, sam łańcuszek, samo magiczne kółko → poprawny wynik, metryki bez NaN,
-wzór z otworem i z łączeniem oczek (kilku rodziców) → przechodzi progi z punktu 1,
-dwie niepołączone części wzoru → nie nakładają się na siebie (overlapRatio = 0 między częściami).
-5. Czas (luźny próg)
-wzór ~500 oczek liczy się w mniej niż np. 2 s (NFR-P2).
-
-Wzory testowe (fixtures)
-
-Żeby powyższe miało sens, potrzebujecie kilku wzorów pokrywających różne techniki:
-
-łańcuszek + 2 rzędy półsłupków (rzędy),
-magiczne kółko + 3 okrążenia z dodawaniem (okrążenia),
-okrążenia z łukami z łańcuszków i wbiciem w otwór (serwetka),
-rząd z łączeniem oczek (zwężanie),
-warstwa mieszana: półsłupki i słupki podwójne w jednym okrążeniu,
-większy wzór ~300–500 oczek (do testu czasu i lokalności).
-*/

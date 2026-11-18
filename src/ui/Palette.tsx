@@ -1,5 +1,5 @@
 import { useAtom, useAtomValue } from 'jotai';
-import { patternAtom, selectedTypeAtom, toolAtom } from '../controller/store';
+import { patternAtom, selectedTypeAtom, toolAtom, engineListAtom, engineIdAtom } from '../controller/store';
 import type { Tool } from '../controller/store';
 import { CATALOG, PALETTE_TYPES } from '../model/stitchCatalog';
 
@@ -15,6 +15,8 @@ export function Palette() {
   const pattern = useAtomValue(patternAtom);
   const cursor = pattern.cursor ? pattern.stitches[pattern.cursor] : undefined;
   const hint = TOOLS.find((t) => t.id === tool)?.hint;
+  const engines = useAtomValue(engineListAtom);
+  const [engineId, setEngineId] = useAtom(engineIdAtom);
 
   return (
     <aside className="panel">
@@ -53,6 +55,12 @@ export function Palette() {
         <dt>Wierzchołków</dt><dd>{Object.keys(pattern.stitches).length}</dd>
         <dt>Krawędzi</dt><dd>{pattern.edges.length}</dd>
       </dl>
+
+      <select value={engineId} onChange={(e) => setEngineId(e.target.value)}>
+        {engines.map((e) => (
+          <option key={e.id} value={e.id}>{e.name}</option>
+        ))}
+      </select>
     </aside>
   );
 }

@@ -1,4 +1,6 @@
 import type { StitchId, Pattern } from "../model";
+import { ForceLayoutEngine } from '../layout/forceLayout';
+import { D3LayoutEngine } from '../layout/d3Layout.ts';
 
 export interface StitchPlacement {
   x: number;        // środek symbolu, jednostki modelu
@@ -35,6 +37,14 @@ export type LayoutResult =
 
 /** Kontrakt modułu algorytmicznego. */
 export interface LayoutEngine {
+  id: string;
   name: string;
   computeLayout(pattern: Pattern, options?: LayoutOptions): Promise<LayoutResult>;
 }
+
+export const ENGINES: LayoutEngine[] = [
+  new ForceLayoutEngine(),
+  new D3LayoutEngine(),
+];
+
+export const DEFAULT_ENGINE_ID = 'smacof';

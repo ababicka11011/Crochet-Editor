@@ -115,7 +115,8 @@ export function forceLayout(p: Pattern, prev?: Layout, maxIter = 300): Layout {
 
 /** Wbudowany silnik układu. Moduł algorytmiczny podmienia go własną implementacją LayoutEngine. */
 export class ForceLayoutEngine implements LayoutEngine {
-  name = 'Force Layout Engine'
+  id = "smacof";
+  name = 'Force Layout Engine';
 
   async computeLayout(p: Pattern, options?: LayoutOptions): Promise<LayoutResult> {
     return { ok: true, layout: forceLayout(p, options?.previous), diagnostics: {} };

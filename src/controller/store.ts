@@ -1,22 +1,25 @@
 import { atom } from 'jotai';
 import type { Getter, Setter } from 'jotai';
-import type { Layout } from '../contracts/Layout.ts';
+import { type Layout, ENGINES, DEFAULT_ENGINE_ID } from '../contracts/Layout.ts';
 import type { Pattern, StitchType } from '../model';
 import type { Result } from '../contracts/Result.ts';
-import { ForceLayoutEngine, layoutFromPositions } from '../layout/forceLayout';
-import { D3LayoutEngine } from '../layout/d3Layout.ts';
+import { layoutFromPositions } from '../layout/forceLayout';
 import { emptyLayout, withPlacement } from '../layout/layoutUtils.ts';
 import { addEdge, addVertex, emptyPattern, removeLastStitch, startNewLayer } from '../model/pattern';
 import { parseProject } from '../persist/projectFile';
 
 export type Tool = 'vertex' | 'insertion' | 'slip-stitch';
 
+export interface EngineInfo {
+  id: string;
+  name: string;
+}
+
 interface Snapshot { pattern: Pattern; layout: Layout }
 interface History { past: Snapshot[]; present: Snapshot; future: Snapshot[] }
 
 // Podmiana na implementację z modułu algorytmicznego (docelowo w Web Workerze).
 // const engine = new ForceLayoutEngine();
-const engine = new D3LayoutEngine();
 
 export const historyAtom = atom<History>({
   past: [],
@@ -36,6 +39,11 @@ export const statusAtom = atom<{ kind: 'ok' | 'busy' | 'error'; text: string }>(
 });
 export const dirtyAtom = atom(false);
 export const autoLayoutAtom = atom(false);
+export const engineIdAtom = atom(DEFAULT_ENGINE_ID);
+export const engineAtom = atom((get) => ENGINES.find((e) => e.id === get(engineIdAtom)) ?? ENGINES[0]);
+export const engineListAtom = atom<readonly EngineInfo[]>(
+  ENGINES.map(({ id, name }) => ({ id, name })),
+);
 
 const push = (h: History, next: Snapshot): History => ({
   past: [...h.past, h.present], present: next, future: [],
@@ -44,7 +52,7 @@ const push = (h: History, next: Snapshot): History => ({
 /** Przelicza układ bieżącego stanu bez nowego wpisu w historii. */
 const relayoutAtom = atom(null, async (get, set) => {
   const h = get(historyAtom);
-  const res = await engine.computeLayout(h.present.pattern, { previous: h.present.layout });
+  const res = await get(engineAtom).computeLayout(h.present.pattern, { previous: h.present.layout });
   const now = get(historyAtom);
   if (now.present !== h.present) return; // w międzyczasie kolejna akcja ma własne przeliczenie
   if (!res.ok) return void set(statusAtom, { kind: 'error', text: res.error });
@@ -158,7 +166,7 @@ export const redoAtom = atom(null, (get, set) => {
 export const recomputeLayoutAtom = atom(null, async (get, set) => {
   const h = get(historyAtom);
   set(statusAtom, { kind: 'busy', text: 'Rozmieszczanie…' });
-  const res = await engine.computeLayout(h.present.pattern, { previous: h.present.layout });
+  const res = await get(engineAtom).computeLayout(h.present.pattern, { previous: h.present.layout });
   if (get(historyAtom).present !== h.present) {
     return void set(statusAtom, { kind: 'ok', text: 'Wzór zmieniono w trakcie - wynik odrzucono.' });
   }

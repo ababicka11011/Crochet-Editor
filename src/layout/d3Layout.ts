@@ -95,7 +95,8 @@ function d3Layout(pattern: Pattern, prev?: Layout, maxIter = 300): Layout {
 }
 
 export class D3LayoutEngine implements LayoutEngine {
-  name = 'Layout Engine using D3.js library'
+  id = 'd3';
+  name = 'Layout Engine using D3.js library';
 
   async computeLayout(p: Pattern, options?: LayoutOptions): Promise<LayoutResult> {
     return { ok: true, layout: d3Layout(p, options?.previous), diagnostics: {} };
