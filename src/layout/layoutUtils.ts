@@ -18,6 +18,35 @@ function directionFromLastTwo(pattern: Pattern, layout: Layout): Vec | null {
   return normalize(sub(last, beforeLast));
 }
 
+export function computeBounds(pl: Readonly<Record<StitchId, StitchPlacement>>): Layout['bounds'] {
+  const all = Object.values(pl);
+  if (all.length === 0) return { minX: -50, minY: -50, maxX: 50, maxY: 50 };
+  const pad = 30;
+  return {
+    minX: Math.min(...all.map((p) => p.x)) - pad,
+    minY: Math.min(...all.map((p) => p.y)) - pad,
+    maxX: Math.max(...all.map((p) => p.x)) + pad,
+    maxY: Math.max(...all.map((p) => p.y)) + pad,
+  };
+}
+
+export const emptyLayout = (): Layout => ({ placements: {}, bounds: computeBounds({}) });
+
+export function withPlacement(layout: Layout, id: StitchId, pos: { x: number; y: number }): Layout {
+  const old = layout.placements[id];
+  const placements = {
+    ...layout.placements,
+    [id]: {
+      x: pos.x,
+      y: pos.y,
+      rotation: old?.rotation ?? 0,
+      sw: old?.sw ?? 1,
+      sh: old?.sh ?? 1,
+    },
+  };
+  return { placements, bounds: computeBounds(placements) };
+}
+
 export function placeNewStitches(pattern: Pattern, layout: Layout, newIds: StitchId[]): LayoutResult {
     const newLayout: Layout = { ...layout };
 

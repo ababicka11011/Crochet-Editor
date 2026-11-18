@@ -4,7 +4,7 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import {
   addEdgeAtom, addVertexAtom, endMoveAtom, layoutAtom, moveNodeAtom, patternAtom, toolAtom,
 } from '../controller/store';
-import { edgeOffsets, edgePath, NODE_RADIUS } from '../layout/edgeGeometry';
+import { edgeOffsets, edgePath, NODE_RADIUS } from '../layout/geometry/edgeGeometry';
 import { layerColor } from '../model/stitchCatalog';
 
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));

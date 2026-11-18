@@ -1,6 +1,7 @@
-import type { Layout, Pattern } from '../contracts';
-import { edgeOffsets, edgePath, NODE_RADIUS } from '../layout/edgeGeometry';
-import { computeBounds } from '../layout/forceLayout';
+import type { Layout } from '../contracts/Layout';
+import type { Pattern } from '../model'
+import { edgeOffsets, edgePath, NODE_RADIUS } from '../layout/geometry/edgeGeometry';
+import { computeBounds } from '../layout/layoutUtils';
 import { layerColor } from '../model/stitchCatalog';
 
 const EDGE_COLOR = { previous: '#777777', insertion: '#3b4fb8', 'slip-stitch': '#d4701a', surrounding: '#888888' };

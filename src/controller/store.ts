@@ -3,9 +3,9 @@ import type { Getter, Setter } from 'jotai';
 import type { Layout } from '../contracts/Layout.ts';
 import type { Pattern, StitchType } from '../model';
 import type { Result } from '../contracts/Result.ts';
-import {
-  ForceLayoutEngine, emptyLayout, layoutFromPositions, withPlacement,
-} from '../layout/forceLayout';
+import { ForceLayoutEngine, layoutFromPositions } from '../layout/forceLayout';
+import { D3LayoutEngine } from '../layout/d3Layout.ts';
+import { emptyLayout, withPlacement } from '../layout/layoutUtils.ts';
 import { addEdge, addVertex, emptyPattern, removeLastStitch, startNewLayer } from '../model/pattern';
 import { parseProject } from '../persist/projectFile';
 
@@ -15,7 +15,8 @@ interface Snapshot { pattern: Pattern; layout: Layout }
 interface History { past: Snapshot[]; present: Snapshot; future: Snapshot[] }
 
 // Podmiana na implementację z modułu algorytmicznego (docelowo w Web Workerze).
-const engine = new ForceLayoutEngine();
+// const engine = new ForceLayoutEngine();
+const engine = new D3LayoutEngine();
 
 export const historyAtom = atom<History>({
   past: [],
