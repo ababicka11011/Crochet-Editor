@@ -28,7 +28,12 @@ export function Canvas() {
   const pan = useRef<{ sx: number; sy: number; lx: number; ly: number; moved: boolean } | null>(null);
   const dragNode = useRef<{ id: string; sx: number; sy: number; moved: boolean } | null>(null);
 
-  useEffect(() => { setPending(null); }, [tool]);
+  // Zmiana trybu anuluje zaczętą krawędź 
+  const [prevTool, setPrevTool] = useState(tool);
+  if (prevTool !== tool) {
+    setPrevTool(tool);
+    setPending(null);
+  }
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setPending(null); };
     window.addEventListener('keydown', onKey);
