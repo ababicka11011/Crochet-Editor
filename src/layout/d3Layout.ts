@@ -4,7 +4,7 @@ import { emptyLayout, computeBounds, placeNewStitches, finalizeLayout } from './
 import { EDGE_LEN, targetDistance } from './geometry/edgeGeometry.ts';
 import { type SimulationNodeDatum, type SimulationLinkDatum, forceSimulation, forceLink, forceManyBody } from 'd3';
 import { firstStitch } from '../model/patternQueries.ts';
-import { average, sub } from './geometry/Vec.ts';
+import { average, sub } from './geometry/vec.ts';
 
 interface Node extends SimulationNodeDatum {
     id: StitchId

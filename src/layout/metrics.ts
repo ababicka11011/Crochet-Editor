@@ -14,8 +14,7 @@ import type { Edge, Pattern, StitchId } from '../model';
 import { firstStitch, parentsOf } from '../model/patternQueries';
 import { STITCH_GEOMETRY } from '../model/stitchCatalog';
 import { EDGE_LEN } from './geometry/edgeGeometry';
-import type { Vec } from './geometry/Vec';
-import { add, angleBetween, average, dot, normalize, scale, sub, upFromRotation, vecLength } from './geometry/Vec';
+import { type Vec, add, angleBetween, average, dot, normalize, scale, sub, upFromRotation, vecLength } from './geometry/vec';
 
 /**
  * Obrys symbolu jako część komórki oczka. Komórka (pełna szerokość/wysokość z katalogu)

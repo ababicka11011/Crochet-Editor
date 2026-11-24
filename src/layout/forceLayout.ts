@@ -1,7 +1,7 @@
 import type { Pattern, StitchId } from '../model';
 import type { StitchPlacement, Layout, LayoutEngine, LayoutOptions, LayoutResult } from '../contracts/Layout.ts'
 import { computeBounds } from './layoutUtils.ts';
-import { EDGE_LEN } from './geometry/edgeGeometry.ts';
+import { EDGE_LEN, targetDistance } from './geometry/edgeGeometry.ts';
 
 
 /**
@@ -14,38 +14,40 @@ export function forceLayout(p: Pattern, prev?: Layout, maxIter = 300): Layout {
   const n = ordered.length;
 
   const index = new Map(ordered.map((s, i) => [s.id, i]));
-  const adj: number[][] = ordered.map(() => []);
+  const adj: { to: number; w: number }[][] = ordered.map(() => []);
   for (const e of p.edges) {
     const a = index.get(e.from);
     const b = index.get(e.to);
     if (a === undefined || b === undefined) continue;
-    adj[a]!.push(b);
-    adj[b]!.push(a);
+    const w = targetDistance(e, p);          // jednostki modelu, > 0
+    adj[a]!.push({ to: b, w });
+    adj[b]!.push({ to: a, w });
   }
 
   // Odległości grafowe (BFS z każdego wierzchołka).
   const D = new Float64Array(n * n);
-  let maxD = 1;
-  for (let s = 0; s < n; s++) {
-    const dist = new Array<number>(n).fill(-1);
-    dist[s] = 0;
-    const queue = [s];
-    for (let h = 0; h < queue.length; h++) {
-      const u = queue[h]!;
-      for (const v of adj[u]!) {
-        if (dist[v] === -1) {
-          dist[v] = dist[u]! + 1;
-          queue.push(v);
-        }
-      }
+let maxD = 1;
+for (let s = 0; s < n; s++) {
+  const dist = new Float64Array(n).fill(Infinity);
+  const done = new Uint8Array(n);
+  dist[s] = 0;
+  for (let k = 0; k < n; k++) {
+    let u = -1;
+    for (let v = 0; v < n; v++) {
+      if (!done[v] && (u < 0 || dist[v]! < dist[u]!)) u = v;
     }
-    for (let t = 0; t < n; t++) {
-      const d = dist[t]!;
-      D[s * n + t] = d;
-      if (d > maxD) maxD = d;
+    if (dist[u]! === Infinity) break;     // reszta nieosiągalna
+    done[u] = 1;
+    for (const { to, w } of adj[u]!) {
+      if (dist[u]! + w < dist[to]!) dist[to] = dist[u]! + w;
     }
   }
-  for (let k = 0; k < D.length; k++) if (D[k]! < 0) D[k] = maxD + 1; // niespójne części
+  for (let t = 0; t < n; t++) {
+    D[s * n + t] = dist[t]!;
+    if (dist[t]! !== Infinity && dist[t]! > maxD) maxD = dist[t]!;
+  }
+}
+for (let k = 0; k < D.length; k++) if (D[k]! === Infinity) D[k] = maxD + 1; // niespójne części
 
   const x: number[] = [];
   const y: number[] = [];

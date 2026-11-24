@@ -1,9 +1,8 @@
 import type { Layout, LayoutResult, StitchPlacement } from '../contracts/Layout';
 import type { StitchId, Stitch, Pattern } from '../model';
 import { previousOf, parentsOf, siblingsOf } from '../model/patternQueries';
-import { add, normalize, rotationFromDirection, rotationFromUp, scale, sub, upFromRotation, type Vec } from './geometry/Vec';
+import { add, normalize, rotationFromDirection, rotationFromUp, scale, sub, upFromRotation, tangentFromRotation, dot, vecLength, type Vec } from './geometry/vec';
 import { type StitchGeometry, STITCH_GEOMETRY } from '../model/stitchCatalog';
-import { tangentFromRotation, dot, vecLength } from './geometry/Vec';
 import { EDGE_LEN } from './geometry/edgeGeometry';
 import { forceLayout } from './forceLayout';
 
