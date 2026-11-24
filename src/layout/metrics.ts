@@ -15,7 +15,7 @@ import { firstStitch, parentsOf } from '../model/patternQueries';
 import { STITCH_GEOMETRY } from '../model/stitchCatalog';
 import { EDGE_LEN } from './geometry/edgeGeometry';
 import type { Vec } from './geometry/Vec';
-import { add, angleBetween, dot, normalize, scale, sub, upFromRotation, vecLength } from './geometry/Vec';
+import { add, angleBetween, average, dot, normalize, scale, sub, upFromRotation, vecLength } from './geometry/Vec';
 
 /**
  * Obrys symbolu jako część komórki oczka. Komórka (pełna szerokość/wysokość z katalogu)
@@ -182,15 +182,6 @@ function edgeLengthBase(edge: Edge, pattern: Pattern): number | null {
   }
 
   return null;
-}
-
-/** Średnia pozycja punktów (środek ciężkości). Wymaga niepustej tablicy. */
-function avgPosition(points: Vec[]): Vec {
-  let sum = {x: 0, y: 0};
-  for (const point of points) {
-    sum = add(sum, point);
-  }
-  return scale(sum, 1/points.length);
 }
 
 // ---------------------------------------------------------------------------
@@ -496,7 +487,7 @@ export function layerRegularity(pattern: Pattern, layout: Layout, layerKind: Lay
     const first = firstStitch(pattern);
     const mrPl = first?.type === 'mr' ? layout.placements[first.id] : undefined;
     if (mrPl) center = { x: mrPl.x, y: mrPl.y };
-    else if (layers.length > 0) center = avgPosition(byLayer.get(layers[0]!)!);
+    else if (layers.length > 0) center = average(byLayer.get(layers[0]!)!);
   }
 
   const shapes: number[] = [];

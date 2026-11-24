@@ -22,3 +22,14 @@ export const clamp = (v: number, min: number, max: number): number =>
 
 export const angleBetween = (a: Vec, b: Vec): number =>
   Math.acos(clamp(dot(a, b), -1, 1));
+
+/** Średnia pozycja punktów (środek ciężkości). Dla pustej tablicy zwraca (0, 0). */
+export function average(points: readonly Vec[]): Vec {
+  if (points.length === 0) return { x: 0, y: 0 };
+  let x = 0, y = 0;
+  for (const p of points) {
+    x += p.x;
+    y += p.y;
+  }
+  return { x: x / points.length, y: y / points.length };
+}

@@ -1,10 +1,10 @@
 import { atom } from 'jotai';
 import type { Getter, Setter } from 'jotai';
-import { type Layout, ENGINES, DEFAULT_ENGINE_ID } from '../contracts/Layout.ts';
+import { type Layout, ENGINES, DEFAULT_ENGINE_ID } from '../contracts/Layout';
 import type { Pattern, StitchType } from '../model';
 import type { Result } from '../contracts/Result.ts';
-import { layoutFromPositions } from '../layout/forceLayout';
-import { emptyLayout, withPlacement } from '../layout/layoutUtils.ts';
+import { layoutFromPositions } from '../layout/layoutUtils';
+import { emptyLayout, withPlacement } from '../layout/layoutUtils';
 import { addEdge, addVertex, emptyPattern, removeLastStitch, startNewLayer } from '../model/pattern';
 import { parseProject } from '../persist/projectFile';
 

@@ -49,16 +49,6 @@ export function withPlacement(layout: Layout, id: StitchId, pos: { x: number; y:
   return { placements, bounds: computeBounds(placements) };
 }
 
-function avgPosition(placements: StitchPlacement[]): Vec {
-  const count = placements.length;
-  const avgPos: Vec = {
-      x: placements.reduce((sum, p) => sum + p.x, 0) / count,
-      y: placements.reduce((sum, p) => sum + p.y, 0) / count,
-  };
-
-  return avgPos;
-}
-
 export function placeNewStitches(pattern: Pattern, layout: Layout, newIds: StitchId[]): LayoutResult {
   const newLayout: Layout = { ...layout };
 
@@ -109,7 +99,7 @@ export function placeNewStitches(pattern: Pattern, layout: Layout, newIds: Stitc
             .map(id => newLayout.placements[id])
             .filter((p): p is StitchPlacement => p !== undefined);
 
-          parentPos = avgPosition(parentPlacements)
+          parentPos = average(parentPlacements)
 
           const upSum = parentPlacements.reduce( (sum, p) => add(sum, upFromRotation(p.rotation)), { x: 0, y: 0 }, );
           const meanUp = normalize(upSum);

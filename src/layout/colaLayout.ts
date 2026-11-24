@@ -32,7 +32,7 @@ function colaLayout(pattern: Pattern, options?: LayoutOptions): LayoutResult {
     const initialResult = placeNewStitches(pattern, start, missing);
     const initial = initialResult.ok ? initialResult.layout : start
     const ids = Object.keys(pattern.stitches);
-    if (ids.length === 0) return { ok: false, error: 'Wzór jest pusty.' };
+    if (ids.length === 0) return { ok: true, layout: start };
     const index = new Map(ids.map((id, i) => [id, i]));
 
     // węzły: pozycja "góra symbolu" -> środek prostokąta
@@ -80,9 +80,6 @@ export class ColaLayoutEngine implements LayoutEngine {
   name = 'Layout Engine using WebCoLa library';
 
   async computeLayout(p: Pattern, options?: LayoutOptions): Promise<LayoutResult> {
-    if (Object.keys(p.stitches).length === 0) {
-        return { ok: false, error: 'Wzór jest pusty. Dodaj przynajmniej jedno oczko, aby rozmieścić.' };
-    }
 
     return colaLayout(p, options);
   }

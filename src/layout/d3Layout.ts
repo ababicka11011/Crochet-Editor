@@ -3,6 +3,8 @@ import type { StitchPlacement, LayoutEngine, LayoutOptions, LayoutResult } from 
 import { emptyLayout, computeBounds, placeNewStitches, finalizeLayout } from './layoutUtils.ts';
 import { EDGE_LEN, targetDistance } from './geometry/edgeGeometry.ts';
 import { type SimulationNodeDatum, type SimulationLinkDatum, forceSimulation, forceLink, forceManyBody } from 'd3';
+import { firstStitch } from '../model/patternQueries.ts';
+import { average, sub } from './geometry/Vec.ts';
 
 interface Node extends SimulationNodeDatum {
     id: StitchId
@@ -13,6 +15,40 @@ interface Link extends SimulationLinkDatum<Node> {
     distance: number;          // docelowa długość z geometrii oczek
 }
 
+/** Przesuwa i obraca `next` tak, żeby jak najlepiej pokrywał się z `prev` (na wspólnych oczkach). */
+function alignToPrevious(
+  next: Record<StitchId, StitchPlacement>,
+  prev: Record<StitchId, StitchPlacement>,
+): Record<StitchId, StitchPlacement> {
+  const ids = Object.keys(next).filter((id) => prev[id]);
+  if (ids.length < 2) return next;
+
+  const cp = average(ids.map((id) => prev[id]!));
+  const cn = average(ids.map((id) => next[id]!));
+
+  let sin = 0, cos = 0;
+  for (const id of ids) {
+    const a = sub(prev[id]!, cp);
+    const b = sub(next[id]!, cn);
+    cos += a.x * b.x + a.y * b.y;
+    sin += b.x * a.y - b.y * a.x;
+  }
+  const theta = Math.atan2(sin, cos);
+  const c = Math.cos(theta), s = Math.sin(theta);
+
+  const out: Record<StitchId, StitchPlacement> = {};
+  for (const [id, p] of Object.entries(next)) {
+    const d = sub(p, cn);
+    out[id] = {
+      ...p,
+      x: cp.x + c * d.x - s * d.y,
+      y: cp.y + s * d.x + c * d.y,
+      rotation: p.rotation + theta,
+    };
+  }
+  return out;
+}
+
 function d3Layout(pattern: Pattern, options?: LayoutOptions): LayoutResult {
     const start = options?.previous ?? emptyLayout();
     const missing = Object.keys(pattern.stitches).filter((id) => !start.placements[id]);
@@ -20,13 +56,15 @@ function d3Layout(pattern: Pattern, options?: LayoutOptions): LayoutResult {
     // w razie niepowodzenia fallback do oryginalnego layoutu
     const initialResult = placeNewStitches(pattern, start, missing);
     const initial = initialResult.ok ? initialResult.layout : start
+    const firstId = firstStitch(pattern)?.id;
 
     let nodes: Node[] = Object.values(pattern.stitches).map((s) => {
         const start = initial.placements[s.id];
         const x = start?.x ?? 0;
         const y = start?.y ?? 0;
-        return s.type === 'mr'
-            ? { id: s.id, x, y, fx: x, fy: y }   // przypięty
+        const pinned = s.type === 'mr' || s.id === firstId;
+        return pinned
+            ? { id: s.id, x, y, fx: x, fy: y }
             : { id: s.id, x, y };
     });
 
@@ -57,7 +95,7 @@ function d3Layout(pattern: Pattern, options?: LayoutOptions): LayoutResult {
     // const ticks = Math.ceil(
     //     Math.log(simulation.alphaMin()) / Math.log(1 - simulation.alphaDecay()),
     // );                                  // liczba kroków do wygaszenia (domyślnie ok. 300)
-    simulation.tick(options?.maxIter ?? 300);
+    simulation.tick(options?.maxIter ?? 1000);
 
     const placements: Record<StitchId, StitchPlacement> = {};
     for (const n of nodes) {
@@ -72,8 +110,9 @@ function d3Layout(pattern: Pattern, options?: LayoutOptions): LayoutResult {
         };
     }
 
+    const aligned = alignToPrevious(placements, initial.placements);
     // wylicz rotation, sw i sh
-    return { ok: true, layout: finalizeLayout(pattern, { placements: placements, bounds: computeBounds(placements) }) };
+    return { ok: true, layout: finalizeLayout(pattern, { placements: aligned, bounds: computeBounds(placements) }) };
 }
 
 export class D3LayoutEngine implements LayoutEngine {
@@ -81,10 +120,7 @@ export class D3LayoutEngine implements LayoutEngine {
   name = 'Layout Engine using D3.js library';
 
   async computeLayout(p: Pattern, options?: LayoutOptions): Promise<LayoutResult> {
-    if (Object.keys(p.stitches).length === 0) {
-        return { ok: false, error: 'Wzór jest pusty. Dodaj przynajmniej jedno oczko, aby rozmieścić.' };
-    }
-    
+
     return d3Layout(p, options);
   }
 }

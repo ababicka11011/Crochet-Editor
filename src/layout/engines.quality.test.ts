@@ -4,20 +4,22 @@ import { emptyPattern } from "../model/pattern";
 import { computeMetrics, layerRegularity } from "./metrics";
 import type { Pattern } from '../model';
 import type { LayerKind } from './metrics';
+import { D3LayoutEngine } from "./d3Layout";
+import { ColaLayoutEngine } from "./colaLayout";
 
 interface Fixture { name: string; pattern: Pattern; layerKind: LayerKind }
 
 // dodać inne silniki jak powstaną i zestaw wzorów testowych
-const engines = [new ForceLayoutEngine()];
+const engines = [new ForceLayoutEngine(), new D3LayoutEngine(), new ColaLayoutEngine()];
 const fixtures: Fixture[] = [
-  { name: 'pusty wzór', pattern: emptyPattern(), layerKind: 'row' },
+  { name: 'Empty pattern', pattern: emptyPattern(), layerKind: 'row' },
 ];
 
 describe.each(engines)('$name', (engine) => {
     /** Dla wzoru pustego wartości wszystkich metryk numerycznych powinny być równe 0, a wszystkie
      * zbiory powinny mieć długość 0.
      */
-    it('Wzór pusty', async () => {
+    it('Empty pattern', async () => {
         const pattern = emptyPattern();
         const res = await engine.computeLayout(pattern);
         expect(res.ok).toBe(true);

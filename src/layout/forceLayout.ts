@@ -3,7 +3,6 @@ import type { StitchPlacement, Layout, LayoutEngine, LayoutOptions, LayoutResult
 import { computeBounds } from './layoutUtils.ts';
 import { EDGE_LEN } from './geometry/edgeGeometry.ts';
 
-// przenieść do layoutUtils
 
 /**
  * Stress majorization (SMACOF, wersja Gaussa-Seidela): docelowa odległość między wierzchołkami
@@ -104,10 +103,6 @@ export class ForceLayoutEngine implements LayoutEngine {
   name = 'Force Layout Engine';
 
   async computeLayout(p: Pattern, options?: LayoutOptions): Promise<LayoutResult> {
-    if (Object.keys(p.stitches).length === 0) {
-        return { ok: false, error: 'Wzór jest pusty. Dodaj przynajmniej jedno oczko, aby rozmieścić.' };
-    }
-    
     return { ok: true, layout: forceLayout(p, options?.previous), diagnostics: {} };
   }
 }
