@@ -7,8 +7,11 @@ import {
 } from '../controller/store';
 import { exportSvg } from '../persist/exportSvg';
 import { download, serializeProject } from '../persist/projectFile';
+import { Button } from './Button';
 import { Canvas } from './Canvas';
 import { Palette } from './Palette';
+
+const Sep = () => <span className="mx-1 h-5 w-px bg-neutral-300" />;
 
 export function App() {
   const pattern = useAtomValue(patternAtom);
@@ -17,6 +20,8 @@ export function App() {
   const dirty = useAtomValue(dirtyAtom);
   const canUndo = useAtomValue(canUndoAtom);
   const canRedo = useAtomValue(canRedoAtom);
+  const auto = useAtomValue(autoLayoutAtom);
+  const setAuto = useSetAtom(setAutoLayoutAtom);
   const undo = useSetAtom(undoAtom);
   const redo = useSetAtom(redoAtom);
   const removeLast = useSetAtom(removeLastAtom);
@@ -26,8 +31,6 @@ export function App() {
   const load = useSetAtom(loadProjectAtom);
   const setDirty = useSetAtom(dirtyAtom);
   const fileInput = useRef<HTMLInputElement>(null);
-  const auto = useAtomValue(autoLayoutAtom);
-  const setAuto = useSetAtom(setAutoLayoutAtom);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -50,20 +53,20 @@ export function App() {
   };
 
   return (
-    <div className="app">
-      <header className="toolbar">
-        <button onClick={onNew}>Nowy</button>
-        <button onClick={() => fileInput.current?.click()}>Otwórz</button>
-        <button onClick={() => { download('wzor.crochet.json', serializeProject(pattern, layout), 'application/json'); setDirty(false); }}>Zapisz</button>
-        <button onClick={() => download('graf.svg', exportSvg(pattern, layout), 'image/svg+xml')}>Eksportuj SVG</button>
-        <span className="sep" />
-        <button disabled={!canUndo} onClick={() => undo()}>Cofnij</button>
-        <button disabled={!canRedo} onClick={() => redo()}>Ponów</button>
-        <button onClick={() => removeLast()}>Usuń ostatni</button>
-        <button onClick={() => newLayer()}>Nowa warstwa</button>
-        <span className="sep" />
-        <button onClick={() => recompute()}>Rozmieść automatycznie</button>
-        <label className="check">
+    <div className="grid h-full grid-cols-[230px_1fr] grid-rows-[auto_1fr_auto] bg-neutral-100 text-sm text-black">
+      <header className="col-span-2 flex flex-wrap items-center gap-1.5 border-b border-neutral-300 bg-white px-3 py-2">
+        <Button onClick={onNew}>Nowy</Button>
+        <Button onClick={() => fileInput.current?.click()}>Otwórz</Button>
+        <Button onClick={() => { download('wzor.crochet.json', serializeProject(pattern, layout), 'application/json'); setDirty(false); }}>Zapisz</Button>
+        <Button onClick={() => download('graf.svg', exportSvg(pattern, layout), 'image/svg+xml')}>Eksportuj SVG</Button>
+        <Sep />
+        <Button disabled={!canUndo} onClick={() => undo()}>Cofnij</Button>
+        <Button disabled={!canRedo} onClick={() => redo()}>Ponów</Button>
+        <Button onClick={() => removeLast()}>Usuń ostatni</Button>
+        <Button onClick={() => newLayer()}>Nowa warstwa</Button>
+        <Sep />
+        <Button onClick={() => recompute()}>Rozmieść automatycznie</Button>
+        <label className="flex cursor-pointer items-center gap-1.5 text-[13px]">
           <input type="checkbox" checked={auto} onChange={(e) => setAuto(e.target.checked)} />
           Przeliczaj po każdej zmianie
         </label>
@@ -77,8 +80,16 @@ export function App() {
         />
       </header>
       <Palette />
-      <main><Canvas /></main>
-      <footer className={`status ${status.kind}`}>{status.text}</footer>
+      <main className="relative overflow-hidden bg-white">
+        <Canvas />
+      </main>
+      <footer
+        className={`col-span-2 border-t border-neutral-300 bg-white px-3 py-1.5 ${
+          status.kind === 'error' ? 'text-red-700' : 'text-neutral-600'
+        }`}
+      >
+        {status.text}
+      </footer>
     </div>
   );
 }
