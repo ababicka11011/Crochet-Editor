@@ -1,22 +1,9 @@
 import type { Pattern, StitchId } from '../model';
 import type { StitchPlacement, Layout, LayoutEngine, LayoutOptions, LayoutResult } from '../contracts/Layout.ts'
-import { emptyLayout, computeBounds } from './layoutUtils.ts';
+import { computeBounds } from './layoutUtils.ts';
+import { EDGE_LEN } from './geometry/edgeGeometry.ts';
 
 // przenieść do layoutUtils
-export function layoutFromPositions(
-  p: Pattern,
-  positions: Record<string, { x: number; y: number }> | null,
-): Layout {
-  const placements: Record<StitchId, StitchPlacement> = {};
-  let missing = false;
-  for (const id of Object.keys(p.stitches)) {
-    const q = positions?.[id];
-    if (q) placements[id] = { x: q.x, y: q.y, rotation: 0, sw: 1, sh: 1 };
-    else missing = true;
-  }
-  const layout = { placements, bounds: computeBounds(placements) };
-  return missing ? forceLayout(p, layout) : layout;
-}
 
 /**
  * Stress majorization (SMACOF, wersja Gaussa-Seidela): docelowa odległość między wierzchołkami
@@ -24,10 +11,8 @@ export function layoutFromPositions(
  * Iteruje do zbieżności, więc wynik jest układem docelowym; start od `prev` (ręczne pozycje).
  */
 export function forceLayout(p: Pattern, prev?: Layout, maxIter = 300): Layout {
-  const EDGE_LEN = 50;
   const ordered = Object.values(p.stitches).sort((a, b) => a.order - b.order);
   const n = ordered.length;
-  if (n === 0) return emptyLayout();
 
   const index = new Map(ordered.map((s, i) => [s.id, i]));
   const adj: number[][] = ordered.map(() => []);
@@ -119,6 +104,10 @@ export class ForceLayoutEngine implements LayoutEngine {
   name = 'Force Layout Engine';
 
   async computeLayout(p: Pattern, options?: LayoutOptions): Promise<LayoutResult> {
+    if (Object.keys(p.stitches).length === 0) {
+        return { ok: false, error: 'Wzór jest pusty. Dodaj przynajmniej jedno oczko, aby rozmieścić.' };
+    }
+    
     return { ok: true, layout: forceLayout(p, options?.previous), diagnostics: {} };
   }
 }

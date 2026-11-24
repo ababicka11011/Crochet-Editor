@@ -1,6 +1,7 @@
 import type { StitchId, Pattern } from "../model";
 import { ForceLayoutEngine } from '../layout/forceLayout';
 import { D3LayoutEngine } from '../layout/d3Layout.ts';
+import { ColaLayoutEngine } from "../layout/colaLayout.ts";
 
 export interface StitchPlacement {
   x: number;        // środek symbolu, jednostki modelu
@@ -22,6 +23,7 @@ export interface LayoutOptions {
     /** Dotychczasowy układ - punkt startowy dla algorytmu (pozycje ustawione ręcznie). */
     previous?: Layout; 
     timeBudgetMs?: number
+    maxIter?: number
 }
 //   type LayoutResult =
 //   | { ok: true; layout: Layout; diagnostics: LayoutDiagnostics }
@@ -45,6 +47,7 @@ export interface LayoutEngine {
 export const ENGINES: LayoutEngine[] = [
   new ForceLayoutEngine(),
   new D3LayoutEngine(),
+  new ColaLayoutEngine()
 ];
 
 export const DEFAULT_ENGINE_ID = 'smacof';

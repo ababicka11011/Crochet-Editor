@@ -1,6 +1,8 @@
-import type { Edge } from '../../model';
+import type { Edge, Pattern } from '../../model';
+import { STITCH_GEOMETRY } from '../../model/stitchCatalog.ts';
 
 export const NODE_RADIUS = 14;
+export const EDGE_LEN = 50;
 
 interface Pt {
   x: number;
@@ -48,3 +50,28 @@ export function edgePath(
     ly: 0.25 * s.y + 0.5 * c.y + 0.25 * e.y,
   };
 }
+
+/** Zwraca długość krawędzi w jednostkach modelu */
+export function targetDistance(edge: Edge, pattern: Pattern): number {
+  const a = cellSize(pattern, edge.from);
+  const b = cellSize(pattern, edge.to);
+  switch (edge.kind) {
+    case 'previous':
+    case 'slip-stitch':
+    case 'surrounding':
+      return Math.max(a.w / 2 + b.w / 2, MIN_DISTANCE);
+    case 'insertion':
+      if (a.h)
+        return Math.max(a.h, MIN_DISTANCE);
+      else return 1;
+    }
+}
+
+/** Wymiary komórki oczka w jednostkach modelu; dla oczek bez geometrii (mr, otwór) - punkt. */
+function cellSize(pattern: Pattern, id: string): { w: number; h: number } {
+  const s = pattern.stitches[id];
+  const g = s ? STITCH_GEOMETRY[s.type] : undefined;
+  return { w: g?.baseWidth ?? 0, h: g?.baseHeight ?? 0 };
+}
+
+const MIN_DISTANCE = 0.5;

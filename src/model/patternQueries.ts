@@ -3,6 +3,9 @@ import type { StitchId, Stitch, Pattern } from '../model';
 export const previousOf = (pattern: Pattern, id: StitchId): StitchId | null =>
   pattern.edges.find(e => e.kind === 'previous' && e.from === id)?.to ?? null;
 
+export const nextOf = (pattern: Pattern, id: StitchId): StitchId | null =>
+  pattern.edges.find(e => e.kind === 'previous' && e.to === id)?.from ?? null;
+
 export const parentsOf = (pattern: Pattern, id: StitchId): StitchId[] =>
   pattern.edges
     .filter(edge => edge.kind === 'insertion' && edge.from === id)

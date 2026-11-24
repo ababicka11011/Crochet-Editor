@@ -13,6 +13,7 @@ import type { Layout, StitchPlacement } from '../contracts/Layout';
 import type { Edge, Pattern, StitchId } from '../model';
 import { firstStitch, parentsOf } from '../model/patternQueries';
 import { STITCH_GEOMETRY } from '../model/stitchCatalog';
+import { EDGE_LEN } from './geometry/edgeGeometry';
 import type { Vec } from './geometry/Vec';
 import { add, angleBetween, dot, normalize, scale, sub, upFromRotation, vecLength } from './geometry/Vec';
 
@@ -113,6 +114,12 @@ export interface LayoutMetrics {
   orientationMetrics: OrientationMetrics,
   layerRegularityMetrics: LayerRegularityMetrics | null
 }
+
+const toModel = (l: Layout): Layout => ({
+  bounds: l.bounds,
+  placements: Object.fromEntries(Object.entries(l.placements)
+    .map(([id, p]) => [id, { ...p, x: p.x / EDGE_LEN, y: p.y / EDGE_LEN }])),
+});
 
 // ---------------------------------------------------------------------------
 // Funkcje pomocnicze: geometria
@@ -528,6 +535,8 @@ export function layerRegularity(pattern: Pattern, layout: Layout, layerKind: Lay
  * tylko w przypadku, gdy typ warstw jest znany i przekazany do funkcji, w przeciwnym wypadku otrzymujemy null
  */
 export function computeMetrics(pattern: Pattern, layout: Layout, layerKind?: LayerKind): LayoutMetrics {
+  layout = toModel(layout);
+
   return {
     overlapMetrics: overlapMetrics(pattern, layout),
     aspectViolationMetrics: aspectViolations(pattern, layout),
