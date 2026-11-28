@@ -7,7 +7,7 @@ import {
 import { addEdge, addVertex, emptyPattern, removeLastStitch, startNewLayer } from '../model/pattern';
 import { parseProject } from '../persist/projectFile';
 
-export type Tool = 'vertex' | 'insertion' | 'slip-stitch';
+export type Tool = 'vertex' | 'insertion' | 'slip-stitch' | 'surrounding';
 
 interface Snapshot { pattern: Pattern; layout: Layout }
 interface History { past: Snapshot[]; present: Snapshot; future: Snapshot[] }
@@ -59,14 +59,19 @@ export const setAutoLayoutAtom = atom(null, (get, set, on: boolean) => {
 
 export const addVertexAtom = atom(null, (get, set, pos: { x: number; y: number }) => {
   const h = get(historyAtom);
-  const r = addVertex(h.present.pattern, get(selectedTypeAtom));
+  const type = get(selectedTypeAtom);
+  const r = addVertex(h.present.pattern, type);
   if (!r.ok) return void set(statusAtom, { kind: 'error', text: r.error });
-  const id = r.value.cursor;
-  if (!id) return;
+  const id = `s${h.present.pattern.nextOrder}`; // id nowo dodanego wierzchołka
   const layout = withPlacement(h.present.layout, id, pos);
   set(historyAtom, push(h, { pattern: r.value, layout }));
   set(dirtyAtom, true);
-  set(statusAtom, { kind: 'ok', text: 'Dodano wierzchołek i krawędź previous.' });
+  set(statusAtom, {
+    kind: 'ok',
+    text: type === 'hole'
+      ? 'Dodano otwór (bez krawędzi previous, bieżący wierzchołek bez zmian).'
+      : 'Dodano wierzchołek i krawędź previous.',
+  });
   maybeRelayout(get, set);
 });
 
@@ -80,7 +85,11 @@ export const addEdgeAtom = atom(null, (get, set, a: { from: string; to: string }
   set(dirtyAtom, true);
   set(statusAtom, {
     kind: 'ok',
-    text: tool === 'slip-stitch' ? 'Slip stitch - bieżący wierzchołek zmieniony.' : 'Dodano krawędź insert.',
+    text: tool === 'slip-stitch'
+      ? 'Slip stitch - bieżący wierzchołek zmieniony.'
+      : tool === 'surrounding'
+        ? 'Dodano krawędź surrounding.'
+        : 'Dodano krawędź insert.',
   });
   maybeRelayout(get, set);
 });

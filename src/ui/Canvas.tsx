@@ -5,12 +5,20 @@ import {
   addEdgeAtom, addVertexAtom, endMoveAtom, layoutAtom, moveNodeAtom, patternAtom, toolAtom,
 } from '../controller/store';
 import { edgeOffsets, edgePath, NODE_RADIUS } from '../layout/edgeGeometry';
-import { layerColor } from '../model/stitchCatalog';
+import { CATALOG, layerColor } from '../model/stitchCatalog';
+import type { EdgeKind } from '../contracts';
 
 const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
-const MARKERS = ['previous', 'insertion', 'slip-stitch'] as const;
-const STROKE = { previous: 'stroke-neutral-500', insertion: 'stroke-black', 'slip-stitch': 'stroke-black' };
-const FILL = { previous: 'fill-neutral-500', insertion: 'fill-black', 'slip-stitch': 'fill-black' };
+const MARKERS: EdgeKind[] = ['previous', 'insertion', 'slip-stitch', 'surrounding'];
+const STROKE: Record<EdgeKind, string> = {
+  previous: 'stroke-neutral-500', insertion: 'stroke-black',
+  'slip-stitch': 'stroke-black', surrounding: 'stroke-neutral-500',
+};
+const FILL: Record<EdgeKind, string> = {
+  previous: 'fill-neutral-500', insertion: 'fill-black',
+  'slip-stitch': 'fill-black', surrounding: 'fill-neutral-500',
+};
+const DASH: Partial<Record<EdgeKind, string>> = { 'slip-stitch': '5 3', surrounding: '2 3' };
 
 export function Canvas() {
   const pattern = useAtomValue(patternAtom);
@@ -134,7 +142,7 @@ export function Canvas() {
           {pattern.edges.map((e, i) => {
             const a = layout.placements[e.from];
             const b = layout.placements[e.to];
-            if (!a || !b || e.kind === 'surrounding') return null;
+            if (!a || !b) return null;
             const g = edgePath(a, b, offsets[i] ?? 0);
             if (!g) return null;
             return (
@@ -142,7 +150,7 @@ export function Canvas() {
                 <path
                   d={g.d}
                   strokeWidth={1.5}
-                  strokeDasharray={e.kind === 'slip-stitch' ? '5 3' : undefined}
+                  strokeDasharray={DASH[e.kind]}
                   className={`fill-none ${STROKE[e.kind]}`}
                   markerEnd={`url(#arr-${e.kind})`}
                 />
@@ -199,13 +207,14 @@ export function Canvas() {
                 )}
                 <circle
                   r={NODE_RADIUS} strokeWidth={2} stroke={layerColor(s.layer)}
+                  strokeDasharray={s.type === 'hole' ? '3 2' : undefined}
                   className="fill-white group-hover:fill-neutral-200"
                 />
                 <text
                   textAnchor="middle" dominantBaseline="central"
                   className="pointer-events-none fill-black text-[10px] font-semibold"
                 >
-                  {s.type}
+                  {CATALOG[s.type].short}
                 </text>
               </g>
             );
