@@ -8,6 +8,7 @@ const TOOLS: { id: Tool; label: string; hint: string }[] = [
   { id: 'vertex', label: 'Wierzchołki', hint: 'Kliknij puste miejsce, aby dodać wierzchołek (z krawędzią previous do bieżącego). Przeciągnij wierzchołek, aby go przesunąć.' },
   { id: 'insertion', label: 'Krawędź: insert', hint: 'Przeciągnij od oczka do punktu, w który jest wbite (albo kliknij oba po kolei). Bieżący wierzchołek się nie zmienia.' },
   { id: 'slip-stitch', label: 'Krawędź: slip stitch', hint: 'Zacznij od bieżącego wierzchołka (pierścień) i wskaż cel. Cel staje się bieżącym wierzchołkiem.' },
+  { id: 'surrounding', label: 'Krawędź: surrounding', hint: 'Przeciągnij od otworu (hole) do oczka na jego brzegu (albo kliknij oba po kolei). Powtórz dla każdego oczka brzegu. Bieżący wierzchołek się nie zmienia.' },
 ];
 
 const h2 = 'mb-1.5 mt-4 text-[13px] font-bold first:mt-0';
@@ -64,11 +65,15 @@ export function Palette() {
           <svg width="34" height="8"><line x1="0" y1="4" x2="34" y2="4" strokeWidth={1.5} strokeDasharray="5 3" className="stroke-black" /></svg>
           slip stitch
         </li>
+        <li className="flex items-center gap-2">
+          <svg width="34" height="8"><line x1="0" y1="4" x2="34" y2="4" strokeWidth={1.5} strokeDasharray="2 3" className="stroke-neutral-500" /></svg>
+          surrounding
+        </li>
       </ul>
 
       <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5">
         <dt className="text-neutral-600">Bieżący</dt>
-        <dd className="m-0 text-right">{cursor ? `${cursor.type} #${cursor.order + 1}` : '–'}</dd>
+        <dd className="m-0 text-right">{cursor ? `${cursor.type} #${cursor.order + 1}` : '-'}</dd>
         <dt className="text-neutral-600">Warstwa</dt>
         <dd className="m-0 text-right">{pattern.currentLayer}</dd>
         <dt className="text-neutral-600">Wierzchołków</dt>

@@ -1,7 +1,7 @@
 import type { Layout, Pattern } from '../contracts';
 import { edgeOffsets, edgePath, NODE_RADIUS } from '../layout/edgeGeometry';
 import { computeBounds } from '../layout/forceLayout';
-import { layerColor } from '../model/stitchCatalog';
+import { CATALOG, layerColor } from '../model/stitchCatalog';
 
 const EDGE_COLOR = { previous: '#777777', insertion: '#3b4fb8', 'slip-stitch': '#d4701a', surrounding: '#888888' };
 
@@ -19,7 +19,7 @@ export function exportSvg(p: Pattern, layout: Layout): string {
       if (!a || !b) return '';
       const g = edgePath(a, b, offsets[i] ?? 0);
       if (!g) return '';
-      const dash = e.kind === 'slip-stitch' ? ' stroke-dasharray="5 3"' : '';
+      const dash = e.kind === 'slip-stitch' ? ' stroke-dasharray="5 3"' : e.kind === 'surrounding' ? ' stroke-dasharray="2 3"' : '';
       const label = e.kind === 'slip-stitch'
         ? `<text x="${g.lx.toFixed(1)}" y="${(g.ly - 3).toFixed(1)}" font-size="8" text-anchor="middle" fill="${EDGE_COLOR[e.kind]}">sl st</text>`
         : '';
@@ -30,7 +30,8 @@ export function exportSvg(p: Pattern, layout: Layout): string {
     .map((s) => {
       const pl = layout.placements[s.id];
       if (!pl) return '';
-      return `<circle cx="${pl.x.toFixed(1)}" cy="${pl.y.toFixed(1)}" r="${NODE_RADIUS}" fill="#ffffff" stroke="${layerColor(s.layer)}" stroke-width="2"/><text x="${pl.x.toFixed(1)}" y="${pl.y.toFixed(1)}" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="central" fill="#1b2330">${s.type}</text>`;
+      const hole = s.type === 'hole' ? ' stroke-dasharray="3 2"' : '';
+      return `<circle cx="${pl.x.toFixed(1)}" cy="${pl.y.toFixed(1)}" r="${NODE_RADIUS}" fill="#ffffff" stroke="${layerColor(s.layer)}" stroke-width="2"${hole}/><text x="${pl.x.toFixed(1)}" y="${pl.y.toFixed(1)}" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="central" fill="#1b2330">${CATALOG[s.type].short}</text>`;
     })
     .join('\n');
   const w = maxX - minX;

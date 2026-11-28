@@ -3,7 +3,7 @@
 
 export type StitchId = string;
 /** Węzły = punkty wbicia. Oczko ścisłe (slip stitch) nie jest węzłem, tylko krawędzią. */
-export type StitchType = 'ch' | 'sc' | 'hdc' | 'dc' | 'tr' | 'mr';
+export type StitchType = 'ch' | 'sc' | 'hdc' | 'dc' | 'tr' | 'mr' | 'hole';
 export type EdgeKind = 'previous' | 'insertion' | 'slip-stitch' | 'surrounding';
 export type Insertion = 'both-loops' | 'front-loop' | 'back-loop' | 'arch';
 

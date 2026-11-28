@@ -20,15 +20,16 @@ export function addVertex(p: Pattern, type: StitchType): Result<Pattern> {
   if (!p.cursor && type !== 'ch' && type !== 'mr') {
     return err('Wzór zaczyna się od łańcuszka (ch) lub magicznego kółka (mr).');
   }
+  const isHole = type === 'hole';
   const id = `s${p.nextOrder}`;
   const stitch: Stitch = { id, type, layer: p.currentLayer, order: p.nextOrder };
   const edges: Edge[] = [...p.edges];
-  if (p.cursor) edges.push({ kind: 'previous', from: id, to: p.cursor });
+  if (p.cursor && !isHole) edges.push({ kind: 'previous', from: id, to: p.cursor });
   return ok({
     ...p,
     stitches: { ...p.stitches, [id]: stitch },
     edges,
-    cursor: id,
+    cursor: isHole ? p.cursor : id, // otwór jest wirtualny - nić zostaje tam, gdzie była
     nextOrder: p.nextOrder + 1,
   });
 }
@@ -39,7 +40,7 @@ export function addVertex(p: Pattern, type: StitchType): Result<Pattern> {
  */
 export function addEdge(
   p: Pattern,
-  kind: 'insertion' | 'slip-stitch',
+  kind: 'insertion' | 'slip-stitch' | 'surrounding',
   from: StitchId,
   to: StitchId,
 ): Result<Pattern> {
@@ -50,15 +51,25 @@ export function addEdge(
   if (p.edges.some((e) => e.kind === kind && e.from === from && e.to === to)) {
     return err('Taka krawędź już istnieje.');
   }
+  if (kind === 'surrounding') {
+    if (a.type !== 'hole' || b.type === 'hole') {
+      return err('Krawędź surrounding prowadzi od otworu (hole) do oczka na jego brzegu.');
+    }
+    if (b.order > a.order) {
+      return err('Otwór dodaj po oczkach, które tworzą jego brzeg.');
+    }
+    return ok({ ...p, edges: [...p.edges, { kind, from, to }] });
+  }
   if (kind === 'insertion') {
     if (!CATALOG[a.type].canInsert) {
-      return err(`${CATALOG[a.type].label} nie jest wbijany w inne punkty.`);
+      return err(`${CATALOG[a.type].label} nie jest wbijane w inne punkty.`);
     }
     if (b.order > a.order) {
       return err('Można wbić tylko w punkt utworzony wcześniej (wzór musi dać się wyszydełkować).');
     }
     return ok({ ...p, edges: [...p.edges, { kind, from, to, insertion: 'both-loops' }] });
   }
+  if (b.type === 'hole') return err('Oczko ścisłe nie może prowadzić do otworu.');
   if (from !== p.cursor) {
     return err('Oczko ścisłe zaczyna się w bieżącym wierzchołku (zaznaczony pierścieniem).');
   }

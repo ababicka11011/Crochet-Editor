@@ -1,7 +1,7 @@
 import type { Edge, Layout, Pattern, Result, Stitch } from '../contracts';
 
 const VERSION = '1.1';
-const TYPES = ['ch', 'sc', 'hdc', 'dc', 'tr', 'mr'];
+const TYPES = ['ch', 'sc', 'hdc', 'dc', 'tr', 'mr', 'hole'];
 const KINDS = ['previous', 'insertion', 'slip-stitch', 'surrounding'];
 
 export type Positions = Record<string, { x: number; y: number }>;

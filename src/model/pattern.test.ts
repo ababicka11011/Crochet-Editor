@@ -61,4 +61,17 @@ describe('model wzoru', () => {
     expect(r.ok && r.value.currentLayer).toBe(2);
     expect(p.currentLayer).toBe(1);
   });
+
+  it('otwór nie ma previous i nie zmienia bieżącego wierzchołka', () => {
+    const p = build('ch', 'ch', 'ch', 'hole');
+    expect(p.cursor).toBe('s2');
+    expect(p.edges.some((e) => e.from === 's3')).toBe(false);
+  });
+
+  it('surrounding tylko od otworu do wcześniejszego oczka', () => {
+    const p = build('ch', 'ch', 'ch', 'hole');
+    const r = addEdge(p, 'surrounding', 's3', 's0');
+    expect(r.ok && r.value.cursor).toBe('s2');
+    expect(addEdge(p, 'surrounding', 's0', 's3').ok).toBe(false);
+  });
 });
